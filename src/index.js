@@ -5,7 +5,8 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require("axios");
-
+const WHATSAPP_API_URL = `https://graph.facebook.com/v15.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN;
 
 const { sendWhatsAppMessage } = require('./whatsapp.js');
 const { sendListMessage } = require('./whatsappList.js');
