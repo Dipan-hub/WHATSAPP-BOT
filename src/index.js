@@ -1,9 +1,10 @@
 // src/index.js
 
 // 1. Import necessary modules
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-require('dotenv').config();
+const axios = require("axios");
 
 
 const { sendWhatsAppMessage } = require('./whatsapp.js');
