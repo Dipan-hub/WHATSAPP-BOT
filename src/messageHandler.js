@@ -1,4 +1,3 @@
-// src/messageHandler.js
 const { sendWhatsAppMessage } = require('./whatsapp.js');
 const { extractOrderDetails } = require('./orderProcessor.js');
 const { calculateFinalPrice } = require('./orderProcessor.js');
@@ -62,9 +61,6 @@ async function generatePaymentLink(amount, name, phone) {
   }
 }
 
-module.exports = generatePaymentLink;
-
-
 async function handleIncomingMessage(from, message) {
   const { orderItems } = extractOrderDetails(message);
   if (orderItems.length === 0) {
@@ -76,24 +72,29 @@ async function handleIncomingMessage(from, message) {
   let { finalPicapoolPrice, tax, totalOriginalPrice } = calculateFinalPrice(orderItems, process.env.ADDITIONAL_DISCOUNT);
 
   // Step 2: If the price meets the minimum requirement, apply additional discount
+  const minOrderValue = parseFloat(process.env.MIN_ORDER_AMOUNT);
+  // Step 2: If the price meets the minimum requirement, apply additional discount
   if (finalPicapoolPrice >= process.env.MIN_ORDER_AMOUNT) {
-    await sendWhatsAppMessage(from, `Awesome! 🎉 Your order meets the minimum requirement of ₹${process.env.MIN_ORDER_AMOUNT}. Let’s check if we can add more discounts for you. 🤑 Give us a moment !!`);
-  } else {
-    await sendWhatsAppMessage(from, `Hi! 👋 The minimum order value for this offer is ₹${process.env.MIN_ORDER_AMOUNT}, so could you please add a bit more to your order and try again? 😊`);
-    return;
-  }
+    await sendWhatsAppMessage(from, `Awesome! 🎉 Your order meets the minimum requirement of ₹${minOrderValue}. Let’s check if we can add more discounts for you. 🤑 Give us a moment!!`);
+} else {
+  await sendWhatsAppMessage(from, `Hi! 👋 The minimum order value for this offer is ₹${minOrderValue}, so could you please add a bit more to your order and try again? 😊`);
+  return;
+}
 
-  // Step 3: Apply the additional discount and send the summary
-  await sendWhatsAppMessage(from, `Great news! 🎉 We’ve added an extra discount of ₹${process.env.ADDITIONAL_DISCOUNT} for you. 🤑
-  The Best Domino's could have given you was ₹${totalOriginalPrice}! 
+// Step 3: Apply the additional discount and send the summary
+const additionalDiscount = parseFloat(process.env.ADDITIONAL_DISCOUNT);
+const finalPriceWithDiscount = finalPicapoolPrice - additionalDiscount;
 
-  Your final price at Picapool is now ₹${finalPicapoolPrice}! 🎯`);
+await sendWhatsAppMessage(from, `Great news! 🎉 We’ve added an extra discount of ₹${additionalDiscount} for you. 🤑
+The Best Domino's could have given you was ₹${totalOriginalPrice}! 
 
-  // Step 4: Ask for the address
-  await sendWhatsAppMessage(from, "May I know where you'd like your orders to be delivered? 📍🏠");
+Your final price at Picapool is now ₹${finalPriceWithDiscount}! 🎯`);
 
-  // Now wait for the user to respond with their address
-  // (Assume the response goes to handleAddressRequest function)
+// Step 4: Ask for the address
+await sendWhatsAppMessage(from, "May I know where you'd like your orders to be delivered? 📍🏠");
+
+// Now wait for the user to respond with their address
+// (Assume the response goes to handleAddressRequest function)
 }
 
 module.exports = { handleIncomingMessage, handleAddressRequest };
