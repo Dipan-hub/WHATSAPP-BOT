@@ -5,8 +5,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
+
 const { sendWhatsAppMessage } = require('./whatsapp.js');
-const { handleIncomingMessage, handleAddressRequest } = require('./messageHandler.js');
+
+
 
 // 2. Create an Express application
 const app = express();
@@ -81,20 +83,25 @@ app.post('/webhook', async (req, res) => {
 
         console.log(`Received message from ${from}: ${msgBody}`);
 
-        // Handle incoming messages (order processing, address validation, etc.)
-        const { handleIncomingMessage, handleAddressRequest } = require('./messageHandler.js');
+        // Here, you can process the message and decide on a response
+        //const responseText = `You said: "${msgBody}"`;
 
-        // Step 1: Handle order processing and checking
-        if (msgBody.toLowerCase().includes("order")) {
+        // Send a response back to the user
+        //await sendWhatsAppMessage(from, responseText);
+
+        // Inside the /webhook POST handler
+
+         // const { handleIncomingMessage } = require('./messageHandler.js');
+
+          // Inside the /webhook POST handler
+         // await handleIncomingMessage(from, msgBody);
+         const { handleIncomingMessage } = require('./messageHandler.js');
+
+          // Inside the /webhook POST handler
           await handleIncomingMessage(from, msgBody);
-        }
 
-        // Step 2: Handle address processing
-        if (msgBody.toLowerCase().includes("delivery")) {
-          // Extract name and phone, possibly from a user database or previous interaction
-          const { name, phone } = getUserInfo(from); // Assuming a function getUserInfo() exists
-          await handleAddressRequest(from, msgBody, finalPicapoolPrice, name, phone);
-        }
+
+
       }
     }
 
@@ -105,6 +112,7 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(404);
   }
 });
+
 
 // 5. Start the server
 const port = process.env.PORT || 3000;  // Default to 3000 if PORT is not set
