@@ -7,23 +7,22 @@ const PACKING_FEE = 20; // ₹20 packing fee
 const PICA_POOL_DISCOUNT = 0.10; // 10% per pizza
 
 function extractOrderDetails(message) {
-    const lines = message.split("\n");
     let orderItems = [];
     let totalDominosPrice = 0;
 
-    lines.forEach(line => {
-        const match = line.match(/\(P_ID:\s*(\d+)\).*₹(\d+)/);
-        if (match) {
-            const pID = match[1];
-            const price = parseFloat(match[2]);
+    // Regular expression to find P_ID values
+    const regex = /\(P_ID:\s*(\d+)\)/g;
+    let match;
 
-            if (priceData[pID]) {
-                const mrp = priceData[pID];
-                totalDominosPrice += mrp;
-                orderItems.push({ pID, mrp, price });
-            }
+    while ((match = regex.exec(message)) !== null) {
+        const pID = match[1];
+
+        if (priceData[pID]) {
+            const mrp = priceData[pID];  // Get original MRP from DB
+            totalDominosPrice += mrp;
+            orderItems.push({ pID, mrp });
         }
-    });
+    }
 
     return { orderItems, totalDominosPrice };
 }
