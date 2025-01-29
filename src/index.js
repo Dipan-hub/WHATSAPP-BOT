@@ -199,20 +199,24 @@ app.post("/webhook", async (req, res) => {
 
 // 5. Define a route to trigger the sending of a list message
 
-app.post('/send-list', async (req, res) => {
-  const { userPhone } = req.body;  // User's phone number passed in the body of the request
-  if (!userPhone) {
-    return res.status(400).json({ error: 'User phone number is required' });
-  }
 
-  try {
-    // Call the sendListMessage function from whatsappList.js
-    const response = await sendListMessage(userPhone);
-    res.json({ message: 'List message sent!', response });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+
+// app.post('/send-list', async (req, res) => {
+//   const { userPhone } = req.body;  // User's phone number passed in the body of the request
+//   if (!userPhone) {
+//     return res.status(400).json({ error: 'User phone number is required' });
+//   }
+
+//   try {
+//     // Call the sendListMessage function from whatsappList.js
+//     const response = await sendListMessage(userPhone);
+//     res.json({ message: 'List message sent!', response });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+
 
 // 6. Start the server
 const port = process.env.PORT || 3000;  // Default to 3000 if PORT is not set
