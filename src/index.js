@@ -56,12 +56,46 @@ app.get('/webhook', (req, res) => {
   if (mode && token) {
     if (mode === 'subscribe' && token === verifyToken) {
       console.log('WEBHOOK_VERIFIED');
-      res.status(200).send(challenge+'1');
+      res.status(200).send(challenge); // Ensure challenge is sent as-is
     } else {
       res.sendStatus(403);
     }
   } else {
     res.sendStatus(400);
+  }
+});
+
+// 4. Webhook Event Handler (POST)
+app.post('/webhook', async (req, res) => {
+  const body = req.body;
+
+  // Check if this is an event from WhatsApp
+  if (body.object) {
+    if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value) {
+      const webhookEvent = body.entry[0].changes[0].value;
+
+      // Get the phone number and message
+      const messages = webhookEvent.messages;
+      if (messages && messages.length > 0) {
+        const message = messages[0];
+        const from = message.from; // Sender's phone number
+        const msgBody = message.text.body;
+
+        console.log(`Received message from ${from}: ${msgBody}`);
+
+        // Here, you can process the message and decide on a response
+        const responseText = `You said: "${msgBody}"`;
+
+        // Send a response back to the user
+        await sendWhatsAppMessage(from, responseText);
+      }
+    }
+
+    // Return a '200 OK' response to all events
+    res.status(200).send('EVENT_RECEIVED');
+  } else {
+    // Return a '404 Not Found' if not from WhatsApp
+    res.sendStatus(404);
   }
 });
 
