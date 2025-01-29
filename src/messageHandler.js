@@ -24,6 +24,9 @@ async function handleIncomingMessage(from, message) {
 
     // Send final discount message
     await sendWhatsAppMessage(from, `Great news! 🎉 We’ve added an extra discount of ₹${extraDiscount} for you. 🤑\nThe Best Domino's could have given you was ₹${totalDominosPrice}! \n\nYour final price at Picapool is now ₹${finalPrice}! 🎯`);
+
+    // Send Location Details
+    await sendListMessage(from);
 }
 
 module.exports = { handleIncomingMessage };
