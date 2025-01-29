@@ -221,7 +221,7 @@ app.post("/webhook", async (req, res) => {
 
 
 // 6. Start the server
-const port = process.env.PORT || 3000;  // Default to 3000 if PORT is not set
+const port = process.env.PORT || 3000;  // Default to 3000 if PORT is not set oh yeah !!
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
