@@ -84,10 +84,19 @@ app.post('/webhook', async (req, res) => {
         console.log(`Received message from ${from}: ${msgBody}`);
 
         // Here, you can process the message and decide on a response
-        const responseText = `You said: "${msgBody}"`;
+        //const responseText = `You said: "${msgBody}"`;
 
         // Send a response back to the user
-        await sendWhatsAppMessage(from, responseText);
+        //await sendWhatsAppMessage(from, responseText);
+
+        // Inside the /webhook POST handler
+
+          const { handleIncomingMessage } = require('./messageHandler.js');
+
+          // Inside the /webhook POST handler
+          await handleIncomingMessage(from, msgBody);
+
+
       }
     }
 
