@@ -43,7 +43,7 @@ app.get('/send-test-message', async (req, res) => {
 
 
 // 5. Start the server
-const PORT = 3300;
-app.listen(PORT, () => {
+const port = process.env.PORT || 3300;  // Default to 3300 if PORT is not set
+app.listen(port, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
