@@ -3,7 +3,11 @@
 // 1. Import necessary modules
 const express = require('express');
 const bodyParser = require('body-parser');
+require('dotenv').config();
+
+
 const { sendWhatsAppMessage } = require('./whatsapp');
+
 
 
 // 2. Create an Express application
@@ -14,6 +18,26 @@ app.use(bodyParser.json());
 
 // Alternatively, you could do:
 // app.use(express.json());
+
+// 3. Webhook Verification Route
+app.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  const verifyToken = process.env.VERIFY_TOKEN;
+
+  if (mode && token) {
+    if (mode === 'subscribe' && token === verifyToken) {
+      console.log('WEBHOOK_VERIFIED');
+      res.status(200).send(challenge);
+    } else {
+      res.sendStatus(403);
+    }
+  } else {
+    res.sendStatus(400);
+  }
+});
 
 // 4. Define a simple GET route to test
 app.get('/', (req, res) => {
