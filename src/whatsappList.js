@@ -66,53 +66,47 @@ async function sendListMessage(userPhone) {
 // });
 
 // Webhook to handle user responses
-app.post("/webhook", async (req, res) => {
-    const body = req.body;
+// app.post("/webhook", async (req, res) => {
+//     const body = req.body;
 
-    if (body.object) {
-        const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+//     if (body.object) {
+//         const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
-        if (message?.interactive?.type === "list_reply") {
-            const userPhone = message.from;
-            const selectedOption = message.interactive.list_reply.id;
+//         if (message?.interactive?.type === "list_reply") {
+//             const userPhone = message.from;
+//             const selectedOption = message.interactive.list_reply.id;
 
-            const responses = {
-                option_1: "You selected Ramanujan Hostel.",
-                option_2: "You selected Raman Hostel.",
-                option_3: "You selected Aanadi Hostel.",
-                option_4: "You selected Sarabhai Hostel.",
-                option_5: "You selected Kalam Hostel.",
-                option_6: "You selected Bhabha Hostel.",
-                option_7: "You selected Visvesaraya Hostel.",
-                option_8: "You selected Sarojini Naidu Hostel."
-            };
+//             const responses = {
+//                 option_1: "You selected Ramanujan Hostel.",
+//                 option_2: "You selected Raman Hostel.",
+//                 option_3: "You selected Aanadi Hostel.",
+//                 option_4: "You selected Sarabhai Hostel.",
+//                 option_5: "You selected Kalam Hostel.",
+//                 option_6: "You selected Bhabha Hostel.",
+//                 option_7: "You selected Visvesaraya Hostel.",
+//                 option_8: "You selected Sarojini Naidu Hostel."
+//             };
 
-            const replyText = responses[selectedOption] || "Invalid selection.";
+//             const replyText = responses[selectedOption] || "Invalid selection.";
 
-            try {
-                await axios.post(WHATSAPP_API_URL, {
-                    messaging_product: "whatsapp",
-                    to: userPhone,
-                    type: "text",
-                    text: { body: replyText }
-                }, {
-                    headers: { Authorization: `Bearer ${ACCESS_TOKEN}`, "Content-Type": "application/json" }
-                });
-                console.log(`User ${userPhone} selected: ${selectedOption}`);
-            } catch (error) {
-                console.error("Error sending message:", error.response?.data || error.message);
-            }
-        }
-        res.sendStatus(200);
-    } else {
-        res.sendStatus(404);
-    }
-});
-
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+//             try {
+//                 await axios.post(WHATSAPP_API_URL, {
+//                     messaging_product: "whatsapp",
+//                     to: userPhone,
+//                     type: "text",
+//                     text: { body: replyText }
+//                 }, {
+//                     headers: { Authorization: `Bearer ${ACCESS_TOKEN}`, "Content-Type": "application/json" }
+//                 });
+//                 console.log(`User ${userPhone} selected: ${selectedOption}`);
+//             } catch (error) {
+//                 console.error("Error sending message:", error.response?.data || error.message);
+//             }
+//         }
+//         res.sendStatus(200);
+//     } else {
+//         res.sendStatus(404);
+//     }
+// });
 
 module.exports = {sendListMessage};
