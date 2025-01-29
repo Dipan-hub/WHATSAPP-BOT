@@ -45,5 +45,5 @@ app.get('/send-test-message', async (req, res) => {
 // 5. Start the server
 const port = process.env.PORT || 3000;  // Default to 3000 if PORT is not set
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
