@@ -91,10 +91,15 @@ app.post('/webhook', async (req, res) => {
 
         // Inside the /webhook POST handler
 
-          const { handleIncomingMessage } = require('./messageHandler.js');
+         // const { handleIncomingMessage } = require('./messageHandler.js');
+
+          // Inside the /webhook POST handler
+         // await handleIncomingMessage(from, msgBody);
+         const { handleIncomingMessage } = require('./messageHandler.js');
 
           // Inside the /webhook POST handler
           await handleIncomingMessage(from, msgBody);
+
 
 
       }
