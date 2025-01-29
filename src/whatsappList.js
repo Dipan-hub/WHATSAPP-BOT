@@ -53,17 +53,17 @@ async function sendListMessage(userPhone) {
 }
 
 // Route to send list message
-app.post("/send-list", async (req, res) => {
-    const { userPhone } = req.body;
-    if (!userPhone) return res.status(400).json({ error: "User phone number is required" });
+// app.post("/send-list", async (req, res) => {
+//     const { userPhone } = req.body;
+//     if (!userPhone) return res.status(400).json({ error: "User phone number is required" });
     
-    try {
-        const response = await sendListMessage(userPhone);
-        res.json({ message: "List message sent!", response });
-    } catch (error) {
-        res.status(500).json({ error });
-    }
-});
+//     try {
+//         const response = await sendListMessage(userPhone);
+//         res.json({ message: "List message sent!", response });
+//     } catch (error) {
+//         res.status(500).json({ error });
+//     }
+// });
 
 // Webhook to handle user responses
 app.post("/webhook", async (req, res) => {
@@ -114,3 +114,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = {sendListMessage};
