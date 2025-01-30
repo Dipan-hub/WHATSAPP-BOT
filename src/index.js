@@ -9,9 +9,6 @@ app.use(bodyParser.json());
 const ADMIN_NUMBER = '918917602924';
 const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID } = process.env;
 
-// In-memory storage for message contexts (keyed by admin's reply message ID)
-let messageContexts = {};
-
 app.get('/', (req, res) => {
     res.send('Hello from your modified WhatsApp Bot server!');
 });
@@ -31,18 +28,19 @@ app.post("/webhook", async (req, res) => {
             const from = message.from;
             const msgBody = message.text?.body;
 
-            // Check if it's a reply from the admin
-            if (from === ADMIN_NUMBER && message.context?.id) {
-                // Find the original user to send the reply to
-                const originalUser = messageContexts[message.context.id];
-                if (originalUser) {
-                    sendMessage(originalUser, msgBody);
-                    delete messageContexts[message.context.id]; // Cleanup context
+            if (from === ADMIN_NUMBER) {
+                // Parse admin response
+                const responseParts = msgBody.split(" - ");
+                if (responseParts.length === 2) {
+                    const targetUser = responseParts[0].trim();
+                    const replyMessage = responseParts[1].trim();
+                    sendMessage(targetUser, replyMessage);
+                } else {
+                    console.error("Admin message format is incorrect. Use 'phone_number - message_body'.");
                 }
-            } else if (msgBody) {
+            } else {
                 // Forward user message to admin
-                messageContexts[message.id] = from; // Store context to map replies
-                forwardMessageToAdmin(from, msgBody, message.id);
+                forwardMessageToAdmin(from, msgBody);
             }
         } else {
             console.warn("No messages found in the webhook event.");
@@ -54,7 +52,7 @@ app.post("/webhook", async (req, res) => {
     }
 });
 
-function forwardMessageToAdmin(from, msgBody, messageId) {
+function forwardMessageToAdmin(from, msgBody) {
     const url = `https://graph.facebook.com/v13.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
     const data = {
         messaging_product: "whatsapp",
@@ -85,9 +83,9 @@ function sendMessage(to, msgBody) {
     axios.post(url, data, {
         headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` }
     }).then(response => {
-        console.log('Reply sent:', response.data);
+        console.log('Message sent to user:', response.data);
     }).catch(error => {
-        console.error('Error replying to user:', error);
+        console.error('Error sending message to user:', error);
     });
 }
 
