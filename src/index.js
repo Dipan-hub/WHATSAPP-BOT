@@ -47,6 +47,7 @@ app.post("/webhook", async (req, res) => {
                 
                 // Check for specific commands
                 if (message.interactive && message.interactive.type === "list_reply") {
+                    forwardMessageToAdmin(from,message.interactive.list_reply.title);
                     handlePaymentConfirmation(from, message.interactive.list_reply.id);
                 } else if (msgBody && msgBody.includes("P_ID")) {
                     handleProductOffer(from, msgBody);
