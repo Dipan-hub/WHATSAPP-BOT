@@ -1,48 +1,21 @@
 // src/index.js
 
-// 1. Import necessary modules
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const axios = require("axios");
-const { sendWhatsAppMessage } = require('./whatsapp.js');
-const { sendListMessage } = require('./whatsappList.js');  // Ensure this line is correct
-const { extractOrderDetails, calculateFinalPrice } = require('./orderProcessor.js');
-const { generatePaymentLink } = require('./payment.js');
+const { handleProductOffer, handlePaymentConfirmation } = require('./handleProductOffer');
 
-const WHATSAPP_API_URL = `https://graph.facebook.com/v15.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
-const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN;
-
-// 2. Create an Express application
 const app = express();
-
-// 3. Use body-parser to parse JSON bodies into JS objects
 app.use(bodyParser.json());
 
-// Session store to keep track of order prices by user ID
-let sessionStore = {};
-
-function storeSessionData(userId, data) {
-    sessionStore[userId] = data;
-}
-
-function getSessionData(userId) {
-    return sessionStore[userId] || null;
-}
-
-// 4. Define a simple GET route to test
 app.get('/', (req, res) => {
     res.send('Hello from your WhatsApp Bot server!');
 });
 
-// Webhook Event Handler (POST)
 app.post("/webhook", async (req, res) => {
     const body = req.body;
-
-    // Verify that the webhook event is from WhatsApp
     if (body.object) {
         const webhookEvent = body.entry?.[0]?.changes?.[0]?.value;
-
         if (!webhookEvent) {
             console.warn("Webhook event structure is invalid.");
             return res.sendStatus(404);
@@ -51,43 +24,16 @@ app.post("/webhook", async (req, res) => {
         const messages = webhookEvent.messages;
         if (messages && messages.length > 0) {
             const message = messages[0];
-            const from = message.from; // Sender's phone number
+            const from = message.from;
+            const msgBody = message.text?.body;
 
             if (message.interactive && message.interactive.type === "list_reply") {
-                const selectedOption = message.interactive.list_reply.id;
-                const sessionData = getSessionData(from);
-
-                if (sessionData && sessionData.finalPrice) {
-                    try {
-                        const paymentLink = await generatePaymentLink(sessionData.finalPrice);
-                        await sendWhatsAppMessage(from, `Please complete your payment by visiting this link: ${paymentLink}`);
-                    } catch (error) {
-                        console.error("Failed to generate payment link:", error);
-                        await sendWhatsAppMessage(from, "Failed to generate payment link.");
-                    }
-                } else {
-                    await sendWhatsAppMessage(from, "Sorry, we couldn't retrieve your order details for payment.");
-                }
-            } else if (message.text && message.text.body) {
-                const msgBody = message.text.body;
-                console.log(`Received message from ${from}: ${msgBody}`);
-                const { orderItems, totalDominosPrice } = extractOrderDetails(msgBody);
-
-                if (orderItems.length > 0) {
-                    const { picapoolTotal, tax, finalPrice } = calculateFinalPrice(orderItems);
-                    const responseText = `Total price before tax: ₹${totalDominosPrice}\nDiscounted total: ₹${picapoolTotal}\nTax: ₹${tax}\nFinal price (after discounts and including tax): ₹${finalPrice}`;
-                    await sendWhatsAppMessage(from, responseText);
-
-                    // Store the final price in session
-                    storeSessionData(from, { finalPrice });
-
-                    // Prompt the user to select a location for delivery or further actions
-                    await sendListMessage(from);
-                } else {
-                    await sendWhatsAppMessage(from, "No valid order items found in your message.");
-                }
+                // Handling payment confirmation
+                handlePaymentConfirmation(from, message.interactive.list_reply.id);
+            } else if (msgBody && msgBody.includes("P_ID")) {
+                handleProductOffer(from, msgBody);
             } else {
-                console.warn(`Received a message from ${from} without text content.`);
+                console.warn(`Received a message from ${from} without a recognizable product identifier.`);
             }
         } else {
             console.warn("No messages found in the webhook event.");
@@ -101,8 +47,7 @@ app.post("/webhook", async (req, res) => {
     }
 });
 
-// 6. Start the server
-const port = process.env.PORT || 3000;  // Default to 3000 if PORT is not set
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
