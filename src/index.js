@@ -6,7 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require("axios");
 const { sendWhatsAppMessage } = require('./whatsapp.js');
-const { extractOrderDetails } = require('./orderProcessor.js');
+const { extractOrderDetails, calculateFinalPrice } = require('./orderProcessor.js');
 
 const WHATSAPP_API_URL = `https://graph.facebook.com/v15.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
 const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN;
@@ -44,14 +44,15 @@ app.post("/webhook", async (req, res) => {
 
             if (msgBody) {
                 console.log(`Received message from ${from}: ${msgBody}`);
-                const { orderItems } = extractOrderDetails(msgBody);
+                const { orderItems, totalDominosPrice } = extractOrderDetails(msgBody);
 
                 if (orderItems.length > 0) {
-                    const orderIDs = orderItems.map(item => item.pID).join(", ");
-                    const responseText = `Your order IDs are: ${orderIDs}`;
+                    const { picapoolTotal, tax, finalPrice } = calculateFinalPrice(orderItems);
+
+                    const responseText = `Total price before tax: ₹${totalDominosPrice}\nDiscounted total: ₹${picapoolTotal}\nTax: ₹${tax}\nFinal price (after discounts and including tax): ₹${finalPrice}`;
                     await sendWhatsAppMessage(from, responseText);
                 } else {
-                    await sendWhatsAppMessage(from, "No order IDs found in your message.");
+                    await sendWhatsAppMessage(from, "No valid order items found in your message.");
                 }
             } else {
                 console.warn(`Received a message from ${from} without text content.`);
