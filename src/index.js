@@ -5,7 +5,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require("axios");
-const { sendWhatsAppMessage } = require('./whatsapp.js');
+const { sendWhatsAppMessage, sendListMessage } = require('./whatsapp.js');
 const { extractOrderDetails, calculateFinalPrice } = require('./orderProcessor.js');
 
 const WHATSAPP_API_URL = `https://graph.facebook.com/v15.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
@@ -51,6 +51,9 @@ app.post("/webhook", async (req, res) => {
 
                     const responseText = `Total price before tax: ₹${totalDominosPrice}\nDiscounted total: ₹${picapoolTotal}\nTax: ₹${tax}\nFinal price (after discounts and including tax): ₹${finalPrice}`;
                     await sendWhatsAppMessage(from, responseText);
+
+                    // After sending the final price, prompt the user to select a location
+                    await sendListMessage(from);
                 } else {
                     await sendWhatsAppMessage(from, "No valid order items found in your message.");
                 }
