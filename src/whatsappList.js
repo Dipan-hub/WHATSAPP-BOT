@@ -19,7 +19,7 @@ async function sendListMessage(userPhone) {
             type: "list",
             header: {
                 type: "text",
-                text: "Location"
+                text: "May I know where you'd like your orders to be delivered? 📍🏠"
             },
             body: { text: "Please select your hostel" },
             action: {
@@ -28,14 +28,14 @@ async function sendListMessage(userPhone) {
                     {
                         title: "My Hostel",
                         rows: [
-                            { id: "option_1", title: "Ramanujan" },
-                            { id: "option_2", title: "Raman" },
-                            { id: "option_3", title: "Aanadi" },
-                            { id: "option_4", title: "Sarabhai" },
-                            { id: "option_5", title: "Kalam" },
-                            { id: "option_6", title: "Bhabha" },
-                            { id: "option_7", title: "Visvesaraya" },
-                            { id: "option_8", title: "Sarojini Naidu" }
+                            { id: "option_1", title: "Anandi" },
+                            { id: "option_2", title: "Bhabha" },
+                            { id: "option_3", title: "Kalam" },
+                            { id: "option_4", title: "Raman" },
+                            { id: "option_5", title: "Ramanujan" },
+                            { id: "option_6", title: "Sarabhai" },
+                            { id: "option_7", title: "Sarojini Naidu" },
+                            { id: "option_8", title: "Visvesvaraya" }
                         ]
                     }
                 ]
