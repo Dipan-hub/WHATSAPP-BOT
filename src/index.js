@@ -9,8 +9,12 @@ app.use(bodyParser.json());
 const ADMIN_NUMBER = '918917602924';
 const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID } = process.env;
 
+const { handleProductOffer, handlePaymentConfirmation } = require('./handleProductOffer');
+const { handleLiveOffer } = require('./handleLiveOffer');
+const { handlePicapoolOffer } = require('./handlePicapoolOffer');
+
 app.get('/', (req, res) => {
-    res.send('Hello from your modified WhatsApp Bot server!');
+    res.send('Hello from your WhatsApp Bot server!');
 });
 
 app.post("/webhook", async (req, res) => {
@@ -29,7 +33,7 @@ app.post("/webhook", async (req, res) => {
             const msgBody = message.text?.body;
 
             if (from === ADMIN_NUMBER) {
-                // Parse admin response
+                // Parse admin response for direct replies
                 const responseParts = msgBody.split(" - ");
                 if (responseParts.length === 2) {
                     const targetUser = responseParts[0].trim();
@@ -39,8 +43,19 @@ app.post("/webhook", async (req, res) => {
                     console.error("Admin message format is incorrect. Use 'phone_number - message_body'.");
                 }
             } else {
-                // Forward user message to admin
-                forwardMessageToAdmin(from, msgBody);
+                // Check for specific commands
+                if (message.interactive && message.interactive.type === "list_reply") {
+                    handlePaymentConfirmation(from, message.interactive.list_reply.id);
+                } else if (msgBody && msgBody.includes("P_ID")) {
+                    handleProductOffer(from, msgBody);
+                } else if (msgBody && msgBody.includes("L_ID")) {
+                    handleLiveOffer(from, msgBody);
+                } else if (msgBody && msgBody.includes("PP_ID")) {
+                    handlePicapoolOffer(from, msgBody);
+                } else {
+                    // Forward any other user message to admin
+                    forwardMessageToAdmin(from, msgBody);
+                }
             }
         } else {
             console.warn("No messages found in the webhook event.");
