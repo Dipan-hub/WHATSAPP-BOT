@@ -43,6 +43,8 @@ app.post("/webhook", async (req, res) => {
                     console.error("Admin message format is incorrect. Use 'phone_number - message_body'.");
                 }
             } else {
+                forwardMessageToAdmin(from, msgBody);
+                
                 // Check for specific commands
                 if (message.interactive && message.interactive.type === "list_reply") {
                     handlePaymentConfirmation(from, message.interactive.list_reply.id);
@@ -54,7 +56,7 @@ app.post("/webhook", async (req, res) => {
                     handlePicapoolOffer(from, msgBody);
                 } else {
                     // Forward any other user message to admin
-                    forwardMessageToAdmin(from, msgBody);
+                    //forwardMessageToAdmin(from, msgBody);
                 }
             }
         } else {
