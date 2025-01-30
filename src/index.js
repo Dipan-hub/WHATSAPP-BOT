@@ -9,6 +9,8 @@ const axios = require("axios");
 const { sendWhatsAppMessage } = require('./whatsapp.js');
 const { sendListMessage } = require('./whatsappList.js');  // Ensure this line is correct
 
+const { generatePaymentLink } = require('./payment.js');
+
 const { extractOrderDetails, calculateFinalPrice } = require('./orderProcessor.js');
 
 const WHATSAPP_API_URL = `https://graph.facebook.com/v15.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
@@ -43,6 +45,31 @@ app.post("/webhook", async (req, res) => {
         if (messages && messages.length > 0) {
             const message = messages[0];
             const from = message.from; // Sender's phone number
+
+
+              // Handle list responses for location selection
+              if (message.interactive && message.interactive.type === "list_reply") {
+                const selectedOption = message.interactive.list_reply.id;
+                const priceDetails = yourFunctionToRetrieveStoredPriceDetails(from); // Implement this function based on your application's needs
+                const finalPrice = priceDetails.finalPrice;
+
+                // Generate payment link based on the selected location and final price
+                //const paymentLink = `https://paymentgateway.com/pay?amount=${finalPrice}&location=${selectedOption}`;
+
+                // Send the payment link to the user
+                //await sendWhatsAppMessage(from, `Please complete your payment by visiting this link: ${paymentLink}`);
+
+
+                    // Generate payment link
+                  try {
+                    const paymentLink = await generatePaymentLink(finalPrice);
+                    await sendWhatsAppMessage(from, `Please complete your payment by visiting this link: ${paymentLink}`);
+                } catch (error) {
+                    console.error("Failed to generate payment link:", error);
+                    await sendWhatsAppMessage(from, "Failed to generate payment link.");
+                }
+            } else {
+
             const msgBody = message.text?.body;
 
             if (msgBody) {
@@ -63,7 +90,11 @@ app.post("/webhook", async (req, res) => {
             } else {
                 console.warn(`Received a message from ${from} without text content.`);
             }
-        } else {
+        } 
+        
+      }
+      
+      else {
             console.warn("No messages found in the webhook event.");
         }
 
