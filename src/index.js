@@ -1,17 +1,19 @@
-// src/index.js
-
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const { handleProductOffer, handlePaymentConfirmation } = require('./handleProductOffer');
-const { handleLiveOffer } = require('./handleLiveOffer');
-const { handlePicapoolOffer } = require('./handlePicapoolOffer');
+const axios = require('axios');
 
 const app = express();
 app.use(bodyParser.json());
 
+const ADMIN_NUMBER = '918917602924';
+const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID } = process.env;
+
+// In-memory storage for message contexts
+let messageContexts = {};
+
 app.get('/', (req, res) => {
-    res.send('Hello from your WhatsApp Bot server!');
+    res.send('Hello from your modified WhatsApp Bot server!');
 });
 
 app.post("/webhook", async (req, res) => {
@@ -29,29 +31,63 @@ app.post("/webhook", async (req, res) => {
             const from = message.from;
             const msgBody = message.text?.body;
 
-            if (message.interactive && message.interactive.type === "list_reply") {
-                // Handling payment confirmation
-                handlePaymentConfirmation(from, message.interactive.list_reply.id);
-            } else if (msgBody && msgBody.includes("P_ID")) {
-                handleProductOffer(from, msgBody);
-            } else if (msgBody && msgBody.includes("L_ID")) {
-              handleLiveOffer(from, msgBody);
-          }else if (msgBody && msgBody.includes("PP_ID")) {
-            handlePicapoolOffer(from, msgBody);
-        }else {
-                console.warn(`Received a message from ${from} without a recognizable product identifier.`);
+            if (from === ADMIN_NUMBER) {
+                // Handle reply from admin
+                const contextId = message.context?.id;  // Assuming context ID is stored in the message metadata
+                if (contextId && messageContexts[contextId]) {
+                    sendMessage(messageContexts[contextId], msgBody);
+                    delete messageContexts[contextId];  // Clean up after sending the reply
+                }
+            } else if (msgBody) {
+                // Save context for potential reply
+                messageContexts[message.id] = from;
+                forwardMessageToAdmin(from, msgBody, message.id);
             }
         } else {
             console.warn("No messages found in the webhook event.");
         }
 
-        // Respond with 200 OK to acknowledge receipt of the event
         res.sendStatus(200);
     } else {
-        // Respond with 404 Not Found if the event is not from WhatsApp
         res.sendStatus(404);
     }
 });
+
+function forwardMessageToAdmin(from, msgBody, messageId) {
+    const url = `https://graph.facebook.com/v13.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+    const data = {
+        messaging_product: "whatsapp",
+        to: ADMIN_NUMBER,
+        text: {
+            body: `Message from ${from}: ${msgBody}`
+        }
+    };
+    axios.post(url, data, {
+        headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` }
+    }).then(response => {
+        console.log('Message forwarded to admin:', response.data);
+    }).catch(error => {
+        console.error('Error sending message:', error);
+    });
+}
+
+function sendMessage(to, msgBody) {
+    const url = `https://graph.facebook.com/v13.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+    const data = {
+        messaging_product: "whatsapp",
+        to: to,
+        text: {
+            body: msgBody
+        }
+    };
+    axios.post(url, data, {
+        headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` }
+    }).then(response => {
+        console.log('Reply sent:', response.data);
+    }).catch(error => {
+        console.error('Error replying to user:', error);
+    });
+}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
