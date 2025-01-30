@@ -23,7 +23,7 @@ function extractOrderDetails(message) {
             orderItems.push({ pID, mrp });
         }
     }
-
+    totalDominosPrice=(totalDominosPrice-60) * 1.05 +20;
     return { orderItems, totalDominosPrice };
 }
 

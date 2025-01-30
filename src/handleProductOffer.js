@@ -19,9 +19,14 @@ async function handleProductOffer(from, msgBody) {
     console.log(`Received product offer message from ${from}: ${msgBody}`);
     const { orderItems, totalDominosPrice } = extractOrderDetails(msgBody);
 
-    if (orderItems.length > 0) {
-        const { picapoolTotal, tax, finalPrice } = calculateFinalPrice(orderItems);
-        const responseText = `Total price before tax: ₹${totalDominosPrice}\nDiscounted total: ₹${picapoolTotal}\nTax: ₹${tax}\nFinal price (after discounts and including tax): ₹${finalPrice}`;
+    if (orderItems.length > 0 && totalDominosPrice >= 314) {
+        //const { picapoolTotal, tax, finalPrice } = calculateFinalPrice(orderItems);
+        let finalPrice = 0.9 * totalDominosPrice;
+        if(finalPrice<1){
+            finalPrice=1;
+        }
+        const responseText = `Great news! 🎉 We’ve added an extra discount of *₹60* for you. 🤑 \nThe Best Domino's could have given you was *₹${totalDominosPrice}*! Your final price at Picapool is now *₹${finalPrice}*! 🎯`;
+
         await sendWhatsAppMessage(from, responseText);
 
         // Store the final price in session
@@ -30,7 +35,7 @@ async function handleProductOffer(from, msgBody) {
         // Prompt the user to select a location or further actions
         await sendListMessage(from);
     } else {
-        await sendWhatsAppMessage(from, "No valid order items found in your message.");
+        await sendWhatsAppMessage(from, "Hi! 👋 The minimum order value for this offer is ₹318, so could you please add a bit more to your order and try again? 😊");
     }
 }
 
