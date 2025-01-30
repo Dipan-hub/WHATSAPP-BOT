@@ -9,7 +9,7 @@ app.use(bodyParser.json());
 const ADMIN_NUMBER = '918917602924';
 const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID } = process.env;
 
-// In-memory storage for message contexts
+// In-memory storage for message contexts (keyed by admin's reply message ID)
 let messageContexts = {};
 
 app.get('/', (req, res) => {
@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 app.post("/webhook", async (req, res) => {
     const body = req.body;
     if (body.object) {
-        const webhookEvent = body.entry?.[0]?.changes?.[0]?.value;
+        const webhookEvent = body.entry[0].changes[0].value;
         if (!webhookEvent) {
             console.warn("Webhook event structure is invalid.");
             return res.sendStatus(404);
@@ -31,16 +31,17 @@ app.post("/webhook", async (req, res) => {
             const from = message.from;
             const msgBody = message.text?.body;
 
-            if (from === ADMIN_NUMBER) {
-                // Handle reply from admin
-                const contextId = message.context?.id;  // Assuming context ID is stored in the message metadata
-                if (contextId && messageContexts[contextId]) {
-                    sendMessage(messageContexts[contextId], msgBody);
-                    delete messageContexts[contextId];  // Clean up after sending the reply
+            // Check if it's a reply from the admin
+            if (from === ADMIN_NUMBER && message.context?.id) {
+                // Find the original user to send the reply to
+                const originalUser = messageContexts[message.context.id];
+                if (originalUser) {
+                    sendMessage(originalUser, msgBody);
+                    delete messageContexts[message.context.id]; // Cleanup context
                 }
             } else if (msgBody) {
-                // Save context for potential reply
-                messageContexts[message.id] = from;
+                // Forward user message to admin
+                messageContexts[message.id] = from; // Store context to map replies
                 forwardMessageToAdmin(from, msgBody, message.id);
             }
         } else {
@@ -59,7 +60,8 @@ function forwardMessageToAdmin(from, msgBody, messageId) {
         messaging_product: "whatsapp",
         to: ADMIN_NUMBER,
         text: {
-            body: `Message from ${from}: ${msgBody}`
+            body: `Message from ${from}: ${msgBody}`,
+            preview_url: false
         }
     };
     axios.post(url, data, {
