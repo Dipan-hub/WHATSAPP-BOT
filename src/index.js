@@ -4,6 +4,8 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const { handleProductOffer, handlePaymentConfirmation } = require('./handleProductOffer');
+const { handleLiveOffer } = require('./handleLiveOffer');
+const { handlePicapoolOffer } = require('./handlePicapoolOffer');
 
 const app = express();
 app.use(bodyParser.json());
@@ -32,7 +34,11 @@ app.post("/webhook", async (req, res) => {
                 handlePaymentConfirmation(from, message.interactive.list_reply.id);
             } else if (msgBody && msgBody.includes("P_ID")) {
                 handleProductOffer(from, msgBody);
-            } else {
+            } else if (msgBody && msgBody.includes("L_ID")) {
+              handleLiveOffer(from, msgBody);
+          }else if (msgBody && msgBody.includes("PP_ID")) {
+            handlePicapoolOffer(from, msgBody);
+        }else {
                 console.warn(`Received a message from ${from} without a recognizable product identifier.`);
             }
         } else {
