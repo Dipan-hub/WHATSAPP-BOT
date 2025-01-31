@@ -9,6 +9,7 @@ const PICA_POOL_DISCOUNT = 0.10; // 10% per pizza
 function extractOrderDetails(message) {
     let orderItems = [];
     let totalDominosPrice = 0;
+    let baseprice=0;
 
     // Regular expression to find P_ID values
     const regex = /\(P_ID:\s*(\d+)\)/g;
@@ -23,8 +24,9 @@ function extractOrderDetails(message) {
             orderItems.push({ pID, mrp });
         }
     }
+    baseprice=totalDominosPrice;
     totalDominosPrice=(totalDominosPrice-60) * 1.05 +20;
-    return { orderItems, totalDominosPrice };
+    return { orderItems, totalDominosPrice,baseprice };
 }
 
 function calculateFinalPrice(orderItems, extraDiscount = 60) {
