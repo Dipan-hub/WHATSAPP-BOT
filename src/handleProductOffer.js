@@ -23,45 +23,53 @@ async function handleProductOffer(from, msgBody) {
 
     if (orderItems.length > 0 && totalDominosPrice >= minOrderAmount) {
         // Tax and packing charge calculations
-        const tax = totalDominosPrice * 0.05;  // 5% tax
+        //const tax = totalDominosPrice * 0.05;  // 5% tax
         const packingCharge = 20; // Fixed packing charge
         
         // Calculate final price before discount
-        const totalWithTaxAndPacking = totalDominosPrice + tax + packingCharge;
+        const totalWithTaxAndPacking = (totalDominosPrice - packingCharge)/1.05 + additionalDiscount;
         
         // Picapool 10% discount
-        let finalPrice = totalWithTaxAndPacking * 0.9;
+        let finalPrice = totalDominosPrice * 0.9;
         if (finalPrice < 1) {
             finalPrice = 1;
         }
         
         // Payment breakdown
-        const breakdown = `
+        const breakdown = ` 🎉 **Good news!** You've unlocked an additional discount of *₹${additionalDiscount}*!
+
+        The best Domino's could have given you was *₹${totalDominosPrice.toFixed(2)}*!
+
+        Here’s the detailed breakdown:
+
         🧾 **Payment Breakdown**:
-        - Base Price: *₹${totalDominosPrice}*
+        - Base Price: *₹${totalWithTaxAndPacking.toFixed(2)}*
+        - Additional Discount: *₹${additionalDiscount}*
         - Tax (5%): *₹${tax.toFixed(2)}*
         - Packing Charge: *₹${packingCharge}*
-        - Total Price (Before Discount): *₹${totalWithTaxAndPacking.toFixed(2)}*
+        - Total Price (Before Discount): *₹${totalDominosPrice.toFixed(2)}*
 
         🏷️ **Picapool Discount**:
-        - 10% Discount: *₹${(totalWithTaxAndPacking * 0.1).toFixed(2)}*
+        - 10% Discount: *₹${(totalDominosPrice * 0.1).toFixed(2)}*
 
         🎯 **Final Price**: *₹${finalPrice.toFixed(2)}*
+
+        After applying a *10%* discount, the final price is just *₹${finalPrice.toFixed(2)}* 🎯
         `;
 
         await sendWhatsAppMessage(from, breakdown);
 
-        const responseText = `🎉 **Good news!** You've unlocked an additional discount of *₹${additionalDiscount}*!
+       /* const responseText = `🎉 **Good news!** You've unlocked an additional discount of *₹${additionalDiscount}*!
 
-The best Domino's could have given you was *₹${totalDominosPrice}*!
+The best Domino's could have given you was *₹${totalDominosPrice.toFixed(2)}*!
 
-But with Picapool, after adding taxes and charges, your total would be *₹${totalWithTaxAndPacking.toFixed(2)}*, and after applying a *10%* discount, the final price is just *₹${finalPrice.toFixed(2)}* 🎯
+But with Picapool, after adding taxes and charges, your total would be *₹${totalWithTaxAndPacking.toFixed(2)}*, and 
 
 Here’s the detailed breakdown:
 ${breakdown}
         `;
 
-        await sendWhatsAppMessage(from, responseText);
+        await sendWhatsAppMessage(from, responseText);*/
 
         // Store the final price in session
         storeSessionData(from, { finalPrice });
