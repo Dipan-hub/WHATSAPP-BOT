@@ -23,11 +23,11 @@ async function handleProductOffer(from, msgBody) {
 
     if (orderItems.length > 0 && totalDominosPrice >= minOrderAmount) {
         // Tax and packing charge calculations
-        //const tax = totalDominosPrice * 0.05;  // 5% tax
         const packingCharge = 20; // Fixed packing charge
         
         // Calculate final price before discount
         const totalWithTaxAndPacking = (totalDominosPrice - packingCharge)/1.05 + additionalDiscount;
+        const tax = totalWithTaxAndPacking * 0.05;  // 5% tax
         
         // Picapool 10% discount
         let finalPrice = totalDominosPrice * 0.9;
