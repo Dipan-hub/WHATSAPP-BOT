@@ -1,9 +1,11 @@
-// handleProductOffer.js
-
 const { sendWhatsAppMessage } = require('./whatsapp.js');
-const { sendListMessage } = require('./whatsappList.js');  // Ensure this line is correct
+const { sendListMessage } = require('./whatsappList.js');
 const { extractOrderDetails, calculateFinalPrice } = require('./orderProcessor.js');
 const { generatePaymentLink } = require('./payment.js');
+
+// Accessing environment variables from .env file
+const minOrderAmount = process.env.MIN_ORDER_AMOUNT;
+const additionalDiscount = process.env.ADDITIONAL_DISCOUNT;
 
 let sessionStore = {};
 
@@ -19,13 +21,45 @@ async function handleProductOffer(from, msgBody) {
     console.log(`Received product offer message from ${from}: ${msgBody}`);
     const { orderItems, totalDominosPrice } = extractOrderDetails(msgBody);
 
-    if (orderItems.length > 0 && totalDominosPrice >= 314) {
-        //const { picapoolTotal, tax, finalPrice } = calculateFinalPrice(orderItems);
-        let finalPrice = 0.9 * totalDominosPrice;
-        if(finalPrice<1){
-            finalPrice=1;
+    if (orderItems.length > 0 && totalDominosPrice >= minOrderAmount) {
+        // Tax and packing charge calculations
+        const tax = totalDominosPrice * 0.05;  // 5% tax
+        const packingCharge = 20; // Fixed packing charge
+        
+        // Calculate final price before discount
+        const totalWithTaxAndPacking = totalDominosPrice + tax + packingCharge;
+        
+        // Picapool 10% discount
+        let finalPrice = totalWithTaxAndPacking * 0.9;
+        if (finalPrice < 1) {
+            finalPrice = 1;
         }
-        const responseText = `Great news! 🎉 We’ve added an extra discount of *₹60* for you. 🤑 \n\nThe Best Domino's could have given you was *₹${totalDominosPrice}*! \n\nYour final price at Picapool is now *₹${finalPrice}*! 🎯`;
+        
+        // Payment breakdown
+        const breakdown = `
+        🧾 **Payment Breakdown**:
+        - Base Price: *₹${totalDominosPrice}*
+        - Tax (5%): *₹${tax.toFixed(2)}*
+        - Packing Charge: *₹${packingCharge}*
+        - Total Price (Before Discount): *₹${totalWithTaxAndPacking.toFixed(2)}*
+
+        🏷️ **Picapool Discount**:
+        - 10% Discount: *₹${(totalWithTaxAndPacking * 0.1).toFixed(2)}*
+
+        🎯 **Final Price**: *₹${finalPrice.toFixed(2)}*
+        `;
+
+        await sendWhatsAppMessage(from, breakdown);
+
+        const responseText = `🎉 **Good news!** You've unlocked an additional discount of *₹${additionalDiscount}*!
+
+The best Domino's could have given you was *₹${totalDominosPrice}*!
+
+But with Picapool, after adding taxes and charges, your total would be *₹${totalWithTaxAndPacking.toFixed(2)}*, and after applying a *10%* discount, the final price is just *₹${finalPrice.toFixed(2)}* 🎯
+
+Here’s the detailed breakdown:
+${breakdown}
+        `;
 
         await sendWhatsAppMessage(from, responseText);
 
@@ -35,7 +69,7 @@ async function handleProductOffer(from, msgBody) {
         // Prompt the user to select a location or further actions
         await sendListMessage(from);
     } else {
-        await sendWhatsAppMessage(from, "Hi! 👋 The minimum order value for this offer is *₹314*, so could you please add a bit more to your order and try again? 😊");
+        await sendWhatsAppMessage(from, `Hi! 👋 The minimum order value for this offer is *₹${minOrderAmount}*, so could you please add a bit more to your order and try again? 😊`);
     }
 }
 
