@@ -38,23 +38,23 @@ async function handleProductOffer(from, msgBody) {
         // Payment breakdown
         const breakdown = ` 🎉 **Good news!** You've unlocked an additional discount of *₹${additionalDiscount}*!
 
-        The best Domino's could have given you was *₹${totalDominosPrice.toFixed(2)}*!
+The best Domino's could have given you was *₹${totalDominosPrice.toFixed(2)}*!
 
-        Here’s the detailed breakdown:
+Here’s the detailed breakdown:
 
-        🧾 **Payment Breakdown**:
-        - Base Price: *₹${totalWithTaxAndPacking}*
-        - Additional Discount: *₹${additionalDiscount}*
-        - Tax (5%): *₹${tax.toFixed(2)}*
-        - Packing Charge: *₹${packingCharge}*
-        - Total Price (Before Discount): *₹${totalDominosPrice.toFixed(2)}*
+🧾 **Payment Breakdown**:
+- Base Price: *₹${totalWithTaxAndPacking}*
+- Additional Discount: *₹${additionalDiscount}*
+- Tax (5%): *₹${tax.toFixed(2)}*
+- Packing Charge: *₹${packingCharge}*
+- Total Price (Before Discount): *₹${totalDominosPrice.toFixed(2)}*
 
-        🏷️ **Picapool Discount**:
-        - 10% Discount: *₹${(totalDominosPrice * 0.1).toFixed(2)}*
+🏷️ **Picapool Discount**:
+- 10% Discount: *₹${(totalDominosPrice * 0.1).toFixed(2)}*
 
-        🎯 **Final Price**: *₹${finalPrice.toFixed(2)}*
+🎯 **Final Price**: *₹${finalPrice.toFixed(2)}*
 
-        After applying a *10%* discount, the final price is just *₹${finalPrice.toFixed(2)}* 🎯
+After applying a *10%* discount, the final price is just *₹${finalPrice.toFixed(2)}* 🎯
         `;
 
         await sendWhatsAppMessage(from, breakdown);
