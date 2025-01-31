@@ -43,7 +43,7 @@ async function handleProductOffer(from, msgBody) {
         Here’s the detailed breakdown:
 
         🧾 **Payment Breakdown**:
-        - Base Price: *₹${totalWithTaxAndPacking.toFixed(2)}*
+        - Base Price: *₹${totalWithTaxAndPacking}*
         - Additional Discount: *₹${additionalDiscount}*
         - Tax (5%): *₹${tax.toFixed(2)}*
         - Packing Charge: *₹${packingCharge}*
