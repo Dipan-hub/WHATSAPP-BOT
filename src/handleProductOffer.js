@@ -26,7 +26,7 @@ async function handleProductOffer(from, msgBody) {
         const packingCharge = 20; // Fixed packing charge
         
         // Calculate final price before discount
-        const totalWithTaxAndPacking = (totalDominosPrice - packingCharge)/1.05 + additionalDiscount;
+        const totalWithTaxAndPacking = ((totalDominosPrice - packingCharge)/(1.05)) + additionalDiscount;
         const tax = totalWithTaxAndPacking * 0.05;  // 5% tax
         
         // Picapool 10% discount
