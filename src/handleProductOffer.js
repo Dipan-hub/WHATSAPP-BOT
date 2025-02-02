@@ -81,11 +81,23 @@ ${breakdown}
     }
 }
 
-async function handlePaymentConfirmation(from, selectedOption) {
+async function handlePaymentConfirmation(from, selectedOption,sessionData) {
     const sessionData = getSessionData(from);
+    console.log("=== handlePaymentConfirmation: Session data ===");
+    console.log(sessionData);
 
     if (sessionData && sessionData.finalPrice) {
         try {
+            // Log the final price before conversion
+            console.log("Generating payment link for finalPrice (rupees):", sessionData.finalPrice);
+            // Convert rupees to paise (if required by your API)
+            const finalPriceNumber = Number(sessionData.finalPrice);
+            const finalPricePaise = Math.round(finalPriceNumber * 100);
+            console.log("Final price in paise:", finalPricePaise);
+            
+            const paymentLink = await generatePaymentLink(finalPricePaise);
+            console.log("Payment link generated:", paymentLink);
+
             const paymentLink = await generatePaymentLink(sessionData.finalPrice);
             await sendWhatsAppMessage(from,`Please complete your payment using the link below:\n\n🔗 ${paymentLink} \n\nMake sure to complete it within 5 minutes to avoid delays. Once payment is confirmed, We’ll place your order immediately. 🚀 \nLet us know once done! 😊`);
         } catch (error) {
@@ -93,6 +105,7 @@ async function handlePaymentConfirmation(from, selectedOption) {
             await sendWhatsAppMessage(from, "Failed to generate payment link.");
         }
     } else {
+        console.error("Session data is missing or finalPrice is not available.");
         await sendWhatsAppMessage(from, "Sorry, we couldn't retrieve your order details for payment.");
     }
 }
