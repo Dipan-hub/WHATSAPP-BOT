@@ -3,7 +3,7 @@
 const axios = require('axios');
 
 // This function will generate a Razorpay payment link
-async function generatePaymentLink(amount, name = "Dipan", phone = "918917602924") {
+async function generatePaymentLink(amount, name = "Dipan", phone = "8917602924") {
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID;  // Store this in your .env file
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET; // Store this in your .env file
 

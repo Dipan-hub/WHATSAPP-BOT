@@ -99,7 +99,7 @@ async function handlePaymentConfirmation(from, selectedOption) {
             const finalPricePaise = Math.round(finalPriceNumber * 100);
             console.log("Final price in paise:", finalPricePaise);
             const PicapoolFinalPrice = finalPricePaise/100;
-            
+            console.log("Final price in Rs:", PicapoolFinalPrice);
             // Call generatePaymentLink only once using the converted paise amount
             const paymentLink = await generatePaymentLink(PicapoolFinalPrice);
             console.log("Payment link generated:", paymentLink);
