@@ -69,7 +69,7 @@ async function extractOrderDetails(message) {
 
     // (d) Look up MRP in the priceData map
     if (priceData[pID]) {
-      const mrp = priceData[pID];
+      const mrp = priceData[pID].price;
       console.log(`   Price for P_ID ${pID}: ₹${mrp}`);
       totalDominosPrice += mrp;
       orderItems.push({ pID, mrp });
