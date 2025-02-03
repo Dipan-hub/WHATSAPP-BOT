@@ -21,7 +21,7 @@ async function sendRazorpayInteractiveMessage(to) {
         link: "https://via.placeholder.com/150.jpg"
       }
     },*/
-    
+
     body: {
       text: "Here are your order details. Please review your order and tap 'Review and Pay' to complete the payment via Razorpay."
     },
@@ -38,7 +38,7 @@ async function sendRazorpayInteractiveMessage(to) {
             type: "payment_gateway",
             payment_gateway: {
               type: "razorpay",
-              configuration_name: "razorpay_config_1",
+              configuration_name: "PP_Payment_Test",
               razorpay: {
                 receipt: "receipt-12345",
                 notes: {
