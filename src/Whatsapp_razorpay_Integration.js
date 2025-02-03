@@ -50,7 +50,7 @@ async function sendRazorpayInteractiveMessage(to) {
         ],
         currency: "INR",
         total_amount: {
-          value: 15000, // For example, 150.00 INR (value is in paise when offset is 100)
+          value: 15750, // For example, 150.00 INR (value is in paise when offset is 100)
           offset: 100
         },
         order: {
