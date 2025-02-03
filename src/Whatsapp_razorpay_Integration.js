@@ -13,11 +13,11 @@ async function sendRazorpayInteractiveMessage(to) {
   // (Image header is commented out; you can include it if needed.)
   const interactivePayload = {
     type: "order_details",
-    /* Uncomment if you wish to include a header image:
+    /* Uncomment to include a header image:
     header: {
       type: "image",
       image: {
-        // Use a placeholder or a valid image URL that returns JPEG or PNG
+        // Use a valid image URL that returns JPEG or PNG
         link: "https://via.placeholder.com/150.jpg"
       }
     },
@@ -31,7 +31,7 @@ async function sendRazorpayInteractiveMessage(to) {
     action: {
       name: "review_and_pay",
       parameters: {
-        reference_id: "order_ref_123", // Generate a dynamic reference ID as needed.
+        reference_id: "order_ref_123", // You can generate a dynamic reference ID as needed.
         type: "digital-goods",
         payment_settings: [
           {
@@ -66,14 +66,14 @@ async function sendRazorpayInteractiveMessage(to) {
                 link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/products/image_cropper_1736791210854.jpg"
               },
               amount: {
-                value: 100, // Adjust as needed
+                value: 100,
                 offset: 100
               },
               quantity: 1,
               country_of_origin: "IN",
               importer_name: "Picapool",
-              // Change importer_address from a string to an object:
-              importer_address: { address: "123, Some Street, City" }
+              // Instead of using { address: "..." } use a key the API expects.
+              importer_address: { street: "123, Some Street, City" }
             },
             {
               name: "Product Two",
@@ -81,13 +81,13 @@ async function sendRazorpayInteractiveMessage(to) {
                 link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/products/image_cropper_1736791210854.jpg"
               },
               amount: {
-                value: 100, // Adjust as needed
+                value: 100,
                 offset: 100
               },
               quantity: 1,
               country_of_origin: "IN",
               importer_name: "Picapool",
-              importer_address: { address: "123, Some Street, City" }
+              importer_address: { street: "123, Some Street, City" }
             }
           ],
           subtotal: {
@@ -95,7 +95,7 @@ async function sendRazorpayInteractiveMessage(to) {
             offset: 100
           },
           tax: {
-            value: 10, // e.g., 5% tax on 200
+            value: 10,
             offset: 100,
             description: "5% tax"
           }
