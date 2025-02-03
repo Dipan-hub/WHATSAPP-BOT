@@ -15,31 +15,42 @@ const EXTRA_DISCOUNT = 60;       // Example discount
  * 1) Fetch & parse CSV from Google Sheets, returning a mapping like { '57': 299, '58': 259, ... }.
  */
 async function fetchPriceData() {
-    const response = await fetch(SHEET_CSV_URL);
-    const csvText = await response.text();
-    
-    const parsed = Papa.parse(csvText, {
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true
-    });
-  
-    const priceMap = {};
-    parsed.data.forEach((row) => {
-      const productId = row['Product'];
-      const originalPrice = row['Price (Original)'];
-      const imageLink = row['Image URL']; // <-- If your CSV has an "Image Link" column
-  
-      if (productId && originalPrice) {
-        priceMap[productId] = {
-          price: originalPrice,
-          image: imageLink || "" 
-        };
-      }
-    });
-  
-    return priceMap;
-  }
+  console.log('--- [fetchPriceData] Fetching CSV...');
+  const response = await fetch(SHEET_CSV_URL);
+  const csvText = await response.text();
+
+  console.log('--- [fetchPriceData] Parsing CSV with Papa...');
+  const parsed = Papa.parse(csvText, {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true
+  });
+
+  const priceMap = {};
+
+  // The columns we expect in each row: 
+  //  "Product", "Price (Original)", "Price (Discounted)", "Name", "Image URL"
+  parsed.data.forEach((row) => {
+    const productId = row['Product'];
+    const originalPrice = row['Price (Original)'];
+    // If you need the discounted price, you can store it as well
+    const discountedPrice = row['Price (Discounted)'] || 0; 
+    const productName = row['Name'] || "";
+    const imageUrl = row['Image URL'] || "";
+
+    if (productId && originalPrice) {
+      priceMap[productId] = {
+        price: originalPrice,    // numeric
+        discountPrice: discountedPrice,
+        name: productName,       // from "Name"
+        image: imageUrl         // from "Image URL"
+      };
+    }
+  });
+
+  console.log('--- [fetchPriceData] Built priceMap:', priceMap);
+  return priceMap;
+}
   
 
 /**
@@ -63,18 +74,28 @@ async function extractOrderDetails(message) {
   let match;
   
   console.log("--- [extractOrderDetails] Searching for '(P_ID: XXX)' patterns...");
+
   while ((match = regex.exec(message)) !== null) {
     const pID = match[1];
-    console.log(" -> Found P_ID:", pID);
-
-    // (d) Look up MRP in the priceData map
     if (priceData[pID]) {
-      const mrp = priceData[pID].price;
-      console.log(`   Price for P_ID ${pID}: ₹${mrp}`);
-      totalDominosPrice += mrp;
-      orderItems.push({ pID, mrp });
+      const itemData = priceData[pID];
+      const numericPrice = itemData.price;  // Just the original price
+      const itemName = itemData.name;       // "Farmhouse (Regular)", etc.
+      const itemImage = itemData.image;     // The full image link
+
+      console.log(` -> Found P_ID ${pID}: ${itemName}, Price = ${numericPrice}`);
+
+      totalDominosPrice += numericPrice;
+
+      // Collect the item details for later use
+      orderItems.push({
+        pID,
+        name: itemName,
+        price: numericPrice,  // store numeric price
+        image: itemImage
+      });
     } else {
-      console.warn(`   Warning: Price data not found for P_ID ${pID}`);
+      console.warn(`   Warning: No data for P_ID ${pID}`);
     }
   }
   
