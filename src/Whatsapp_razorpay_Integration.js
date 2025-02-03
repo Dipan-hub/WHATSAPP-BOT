@@ -73,7 +73,7 @@ async function sendRazorpayInteractiveMessage(to) {
               country_of_origin: "IN",
               importer_name: "Picapool",
               // Instead of using { address: "..." } use a key the API expects.
-              importer_address: { street: "123, Some Street, City" }
+              importer_address:  "123, Some Street, City" 
             },
             {
               name: "Product Two",
@@ -87,7 +87,7 @@ async function sendRazorpayInteractiveMessage(to) {
               quantity: 1,
               country_of_origin: "IN",
               importer_name: "Picapool",
-              importer_address: { street: "123, Some Street, City" }
+              importer_address: "123, Some Street, City" 
             }
           ],
           subtotal: {
