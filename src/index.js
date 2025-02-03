@@ -10,7 +10,7 @@ const { handleLiveOffer } = require('./handleLiveOffer');
 const { handlePicapoolOffer } = require('./handlePicapoolOffer');
 
 // Import the Razorpay interactive message function
-const { sendRazorpayInteractiveMessage } = require('./whatsapprazorpay/WhatsAppRazorpayPayment');
+const { sendRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
 
 const app = express();
 app.use(bodyParser.json());
