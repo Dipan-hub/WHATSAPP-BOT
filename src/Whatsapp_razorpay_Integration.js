@@ -5,23 +5,21 @@ require('dotenv').config();
 
 const axios = require('axios');
 
+/**
+ * Sends an interactive "order_details" message via WhatsApp Cloud API with a
+ * Razorpay payment gateway setting. You must have 'WhatsApp Business' Cloud
+ * API access and a valid phone number ID + token for this to work.
+ *
+ * @param {string} to - The recipient's WhatsApp phone number in E.164 format (e.g. '918123456789').
+ * @returns {Promise<object>} - The response data from the WhatsApp API call.
+ */
 async function sendRazorpayInteractiveMessage(to) {
-  // Calculate expiration timestamp (5 minutes from now; in seconds)
+  // 1) Calculate expiration timestamp (5 minutes from now; in seconds)
   const expirationTimestamp = Math.floor(Date.now() / 1000) + 300;
 
-  // Build the interactive payload following WhatsApp’s order_details schema.
-  // (Image header is commented out; you can include it if needed.)
+  // 2) Build the interactive payload, following WhatsApp’s order_details schema
   const interactivePayload = {
     type: "order_details",
-    /* Uncomment to include a header image:
-    header: {
-      type: "image",
-      image: {
-        // Use a valid image URL that returns JPEG or PNG
-        link: "https://via.placeholder.com/150.jpg"
-      }
-    },
-    */
     body: {
       text: "Here are your order details. Please review your order and tap 'Review and Pay' to complete the payment via Razorpay."
     },
@@ -31,7 +29,7 @@ async function sendRazorpayInteractiveMessage(to) {
     action: {
       name: "review_and_pay",
       parameters: {
-        reference_id: "order_ref_123", // You can generate a dynamic reference ID as needed.
+        reference_id: "order_ref_123", // You can generate dynamic reference IDs
         type: "digital-goods",
         payment_settings: [
           {
@@ -50,13 +48,13 @@ async function sendRazorpayInteractiveMessage(to) {
         ],
         currency: "INR",
         total_amount: {
-          value: 210, // total_amount = subtotal (200) + tax (10) [offset=100]
-          offset: 100
+          value: 210, // total_amount = 200 (subtotal) + 10 (tax)
+          offset: 100 // offset=100 means the above "value" is effectively "2.10" in the final display
         },
         order: {
           status: "pending",
           expiration: {
-            timestamp: expirationTimestamp.toString(),
+            timestamp: expirationTimestamp.toString(), // Must be > current time + 300
             description: "Order expires in 5 minutes"
           },
           items: [
@@ -69,11 +67,7 @@ async function sendRazorpayInteractiveMessage(to) {
                 value: 100,
                 offset: 100
               },
-              quantity: 1,
-              //country_of_origin: "IN",
-              //importer_name: "Picapool",
-              // Instead of using { address: "..." } use a key the API expects.
-              //importer_address:  "123, Some Street, City" 
+              quantity: 1
             },
             {
               name: "Product Two",
@@ -84,10 +78,7 @@ async function sendRazorpayInteractiveMessage(to) {
                 value: 100,
                 offset: 100
               },
-              quantity: 1,
-              //country_of_origin: "IN",
-             // importer_name: "Picapool",
-              //importer_address: "123, Some Street, City" 
+              quantity: 1
             }
           ],
           subtotal: {
@@ -99,13 +90,13 @@ async function sendRazorpayInteractiveMessage(to) {
             offset: 100,
             description: "5% tax"
           }
-          // Shipping and discount are omitted (assumed to be 0)
+          // shipping, discount, etc. omitted
         }
       }
     }
   };
 
-  // Wrap the interactive payload into the overall WhatsApp message object.
+  // 3) Wrap the interactive payload into the overall WhatsApp message object
   const messagePayload = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -114,7 +105,7 @@ async function sendRazorpayInteractiveMessage(to) {
     interactive: interactivePayload
   };
 
-  // Retrieve configuration from environment variables.
+  // 4) Retrieve config from env
   const whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const whatsappAccessToken = process.env.WHATSAPP_TOKEN;
 
@@ -122,9 +113,15 @@ async function sendRazorpayInteractiveMessage(to) {
     console.error("WhatsApp access token is not defined. Please set the WHATSAPP_TOKEN environment variable.");
     throw new Error("Missing WhatsApp access token.");
   }
+  if (!whatsappPhoneNumberId) {
+    console.error("WhatsApp phone number ID is not defined. Please set the WHATSAPP_PHONE_NUMBER_ID environment variable.");
+    throw new Error("Missing WhatsApp phone number ID.");
+  }
 
+  // 5) Construct the API URL
   const apiUrl = `https://graph.facebook.com/v16.0/${whatsappPhoneNumberId}/messages`;
 
+  // 6) Make the POST request
   try {
     const response = await axios.post(apiUrl, messagePayload, {
       headers: {
