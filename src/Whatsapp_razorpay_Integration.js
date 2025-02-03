@@ -99,7 +99,7 @@ async function sendRazorpayInteractiveMessage(to) {
 
   // Retrieve configuration from environment variables.
   const whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const whatsappAccessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+  const whatsappAccessToken = process.env.WHATSAPP_TOKEN;
 
   const apiUrl = `https://graph.facebook.com/v16.0/${whatsappPhoneNumberId}/messages`;
 
