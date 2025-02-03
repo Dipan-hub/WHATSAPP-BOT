@@ -26,9 +26,9 @@ async function sendDynamicRazorpayInteractiveMessage({
     const itemPriceInPaise = Math.round(item.mrp * 100);
     return {
       name: `Product ${item.pID}`,
-      image: {
-        link: item.image || "https://example.com/no-image.jpg"
-      },
+      //image: {
+      //  link: item.image || "https://example.com/no-image.jpg"
+      //},
       amount: {
         value: itemPriceInPaise,
         offset: 100
