@@ -1,4 +1,8 @@
 // Whatsapp_razorpay_Integration.js
+
+// Load environment variables (only needed if running locally)
+require('dotenv').config();
+
 const axios = require('axios');
 
 async function sendRazorpayInteractiveMessage(to) {
@@ -6,16 +10,18 @@ async function sendRazorpayInteractiveMessage(to) {
   const expirationTimestamp = Math.floor(Date.now() / 1000) + 300;
 
   // Build the interactive payload following WhatsApp’s order_details schema.
-  // Note that the header image now uses a different URL (from Placekitten) to avoid media download issues.
+  // Option 1: To include an image header, use a dummy image URL that returns JPEG.
   const interactivePayload = {
     type: "order_details",
-    header: {
+
+    /*header: {
       type: "image",
       image: {
-        // Use a publicly accessible image URL that returns a valid image.
-        link: "https://www.lifewire.com/thmb/SFEc4jDldsGm33lTFFkhX6a7jhI=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/ScreenShot2020-04-20at10.03.23AM-d55387c4422940be9a4f353182bd778c.jpg"
+        // Use a placeholder image that returns JPEG
+        link: "https://via.placeholder.com/150.jpg"
       }
-    },
+    },*/
+    
     body: {
       text: "Here are your order details. Please review your order and tap 'Review and Pay' to complete the payment via Razorpay."
     },
@@ -25,7 +31,7 @@ async function sendRazorpayInteractiveMessage(to) {
     action: {
       name: "review_and_pay",
       parameters: {
-        reference_id: "order_ref_123", // This can be dynamically generated as needed.
+        reference_id: "order_ref_123", // You can generate a dynamic reference ID as needed.
         type: "digital-goods",
         payment_settings: [
           {
@@ -44,7 +50,7 @@ async function sendRazorpayInteractiveMessage(to) {
         ],
         currency: "INR",
         total_amount: {
-          value: 15000, // For example: 150.00 INR (value is in paise when offset is 100)
+          value: 15000, // For example, 150.00 INR (value is in paise when offset is 100)
           offset: 100
         },
         order: {
@@ -79,7 +85,7 @@ async function sendRazorpayInteractiveMessage(to) {
             offset: 100
           },
           tax: {
-            value: 750, // 5% tax of 15000 paise (i.e., ₹7.50)
+            value: 750, // 5% tax of 15000 paise (i.e. ₹7.50)
             offset: 100,
             description: "5% tax"
           }
@@ -88,7 +94,23 @@ async function sendRazorpayInteractiveMessage(to) {
     }
   };
 
-  // Wrap the interactive payload in the overall WhatsApp message object.
+  // If you prefer to skip the image header entirely, comment out the header section:
+  /*
+  const interactivePayload = {
+    type: "order_details",
+    body: {
+      text: "Here are your order details. Please review your order and tap 'Review and Pay' to complete the payment via Razorpay."
+    },
+    footer: {
+      text: "Order expires in 5 minutes."
+    },
+    action: {
+      // ... rest of the payload remains the same
+    }
+  };
+  */
+
+  // Wrap the interactive payload into the overall WhatsApp message object.
   const messagePayload = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -100,6 +122,12 @@ async function sendRazorpayInteractiveMessage(to) {
   // Retrieve configuration from environment variables.
   const whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const whatsappAccessToken = process.env.WHATSAPP_TOKEN;
+
+  // Ensure the access token is set.
+  if (!whatsappAccessToken) {
+    console.error("WhatsApp access token is not defined. Please set the WHATSAPP_ACCESS_TOKEN environment variable.");
+    throw new Error("Missing WhatsApp access token.");
+  }
 
   const apiUrl = `https://graph.facebook.com/v16.0/${whatsappPhoneNumberId}/messages`;
 
