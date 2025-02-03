@@ -1,34 +1,32 @@
-// Whatsapp_razorpay_Integration.js
+// src/whatsapprazorpay/WhatsAppRazorpayPayment.js
+require("dotenv").config();
+const axios = require("axios");
 
-require('dotenv').config();
-const axios = require('axios');
-
-// ---- Add a simple in-memory counter ----
+// Simple in-memory counter to generate unique references
 let orderCounter = 0;
 
 /**
- * Sends an interactive "order_details" message via WhatsApp Cloud API with a
- * Razorpay payment gateway setting.
+ * Sends an interactive "order_details" message via WhatsApp Cloud API
+ * with a Razorpay payment gateway option.
  *
  * @param {string} to - The recipient's WhatsApp phone number in E.164 format (e.g. '918123456789').
- * @returns {Promise<object>} - The response data from the WhatsApp API call.
+ * @returns {Promise<object>} - The response data from the WhatsApp API.
  */
 async function sendRazorpayInteractiveMessage(to) {
-  // Increment the counter for each new call
+  // Increment for each call -> new order/ref ID
   orderCounter++;
-
-  // Generate unique references based on counter
   const uniqueReferenceId = `order_ref_${orderCounter}`;
-  const uniqueReceiptId = `receipt_${orderCounter}`;
+  const uniqueReceiptId   = `receipt_${orderCounter}`;
 
-  // 1) Calculate expiration timestamp (5 minutes from now; in seconds)
+  // 1) Expiration (5 min from now)
   const expirationTimestamp = Math.floor(Date.now() / 1000) + 300;
 
-  // 2) Build the interactive payload
+  // 2) Build the interactive "order_details" payload
   const interactivePayload = {
     type: "order_details",
     body: {
-      text: "Here are your order details. Please review your order and tap 'Review and Pay' to complete the payment via Razorpay."
+      text:
+        "Here are your order details. Please review and tap 'Review and Pay' to complete the payment."
     },
     footer: {
       text: "Order expires in 5 minutes."
@@ -36,17 +34,17 @@ async function sendRazorpayInteractiveMessage(to) {
     action: {
       name: "review_and_pay",
       parameters: {
-        reference_id: uniqueReferenceId,  // <-- dynamic
+        reference_id: uniqueReferenceId, // Unique per call
         type: "digital-goods",
         payment_settings: [
           {
             type: "payment_gateway",
             payment_gateway: {
               type: "razorpay",
-              configuration_name: process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
+              configuration_name:
+                process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
               razorpay: {
-                // Use a unique receipt for each new order
-                receipt: uniqueReceiptId,   // <-- dynamic
+                receipt: uniqueReceiptId,
                 notes: {
                   promo: "testpromo"
                 }
@@ -56,7 +54,7 @@ async function sendRazorpayInteractiveMessage(to) {
         ],
         currency: "INR",
         total_amount: {
-          value: 210,
+          value: 210, // 2.10 if offset=100
           offset: 100
         },
         order: {
@@ -69,10 +67,10 @@ async function sendRazorpayInteractiveMessage(to) {
             {
               name: "Product One",
               image: {
-                link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/products/image_cropper_1736791210854.jpg"
+                link: "https://example.com/product1.jpg"
               },
               amount: {
-                value: 100,
+                value: 100, // 1.00 if offset=100
                 offset: 100
               },
               quantity: 1
@@ -80,30 +78,31 @@ async function sendRazorpayInteractiveMessage(to) {
             {
               name: "Product Two",
               image: {
-                link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/products/image_cropper_1736791210854.jpg"
+                link: "https://example.com/product2.jpg"
               },
               amount: {
-                value: 100,
+                value: 100, // 1.00 if offset=100
                 offset: 100
               },
               quantity: 1
             }
           ],
           subtotal: {
-            value: 200,
+            value: 200, // 2.00
             offset: 100
           },
           tax: {
-            value: 10,
+            value: 10,  // 0.10
             offset: 100,
             description: "5% tax"
           }
+          // shipping, discount, etc. can be added
         }
       }
     }
   };
 
-  // 3) Wrap the interactive payload in the overall WhatsApp message
+  // 3) Overall WhatsApp message
   const messagePayload = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -112,23 +111,21 @@ async function sendRazorpayInteractiveMessage(to) {
     interactive: interactivePayload
   };
 
-  // 4) Retrieve config from env
+  // 4) Retrieve config
   const whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const whatsappAccessToken = process.env.WHATSAPP_TOKEN;
+  const whatsappAccessToken   = process.env.WHATSAPP_TOKEN;
 
   if (!whatsappAccessToken) {
-    console.error("WhatsApp access token is not defined. Please set the WHATSAPP_TOKEN environment variable.");
-    throw new Error("Missing WhatsApp access token.");
+    throw new Error("Missing WHATSAPP_TOKEN in env.");
   }
   if (!whatsappPhoneNumberId) {
-    console.error("WhatsApp phone number ID is not defined. Please set the WHATSAPP_PHONE_NUMBER_ID environment variable.");
-    throw new Error("Missing WhatsApp phone number ID.");
+    throw new Error("Missing WHATSAPP_PHONE_NUMBER_ID in env.");
   }
 
-  // 5) Construct the API URL
+  // 5) Construct API URL
   const apiUrl = `https://graph.facebook.com/v16.0/${whatsappPhoneNumberId}/messages`;
 
-  // 6) Make the POST request
+  // 6) POST to WhatsApp
   try {
     const response = await axios.post(apiUrl, messagePayload, {
       headers: {
@@ -139,10 +136,7 @@ async function sendRazorpayInteractiveMessage(to) {
     console.log("Razorpay interactive message sent successfully:", response.data);
     return response.data;
   } catch (error) {
-    console.error(
-      "Error sending Razorpay interactive message:",
-      error.response ? error.response.data : error.message
-    );
+    console.error("Error sending Razorpay interactive message:", error.response?.data || error.message);
     throw error;
   }
 }
