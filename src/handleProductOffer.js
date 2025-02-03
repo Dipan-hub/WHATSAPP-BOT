@@ -2,7 +2,7 @@ const { sendWhatsAppMessage } = require('./whatsapp.js');
 const { sendListMessage } = require('./whatsappList.js');
 const { extractOrderDetails, calculateFinalPrice } = require('./orderProcessor.js');
 const { generatePaymentLink } = require('./payment.js');
-const { sendRazorpayInteractiveMessage } = require('./Whatsapp_razorpay_Integration');
+const { sendRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
 
 // Accessing environment variables from .env file
 const minOrderAmount = process.env.MIN_ORDER_AMOUNT;
