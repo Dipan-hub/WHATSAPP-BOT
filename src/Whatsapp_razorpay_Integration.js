@@ -20,7 +20,7 @@ async function sendRazorpayInteractiveMessage(to) {
   // 2) Build the interactive payload, following WhatsApp’s order_details schema
   const interactivePayload = {
     type: "order_details",
-    header: {
+    /*header: {
       type: "image",
       image: {
         link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091178.jpg",
@@ -28,7 +28,7 @@ async function sendRazorpayInteractiveMessage(to) {
           name: "PICAPOOL"
         }
       }
-    },
+    },*/
     body: {
       text: "Here are your order details. Please review your order and tap 'Review and Pay' to complete the payment via Razorpay."
     },
