@@ -1,34 +1,32 @@
 // Whatsapp_razorpay_Integration.js
 
-// Load environment variables (only needed if running locally)
 require('dotenv').config();
-
 const axios = require('axios');
+
+// ---- Add a simple in-memory counter ----
+let orderCounter = 0;
 
 /**
  * Sends an interactive "order_details" message via WhatsApp Cloud API with a
- * Razorpay payment gateway setting. You must have 'WhatsApp Business' Cloud
- * API access and a valid phone number ID + token for this to work.
+ * Razorpay payment gateway setting.
  *
  * @param {string} to - The recipient's WhatsApp phone number in E.164 format (e.g. '918123456789').
  * @returns {Promise<object>} - The response data from the WhatsApp API call.
  */
 async function sendRazorpayInteractiveMessage(to) {
+  // Increment the counter for each new call
+  orderCounter++;
+
+  // Generate unique references based on counter
+  const uniqueReferenceId = `order_ref_${orderCounter}`;
+  const uniqueReceiptId = `receipt_${orderCounter}`;
+
   // 1) Calculate expiration timestamp (5 minutes from now; in seconds)
   const expirationTimestamp = Math.floor(Date.now() / 1000) + 300;
 
-  // 2) Build the interactive payload, following WhatsApp’s order_details schema
+  // 2) Build the interactive payload
   const interactivePayload = {
     type: "order_details",
-    /*header: {
-      type: "image",
-      image: {
-        link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091178.jpg",
-        provider: {
-          name: "PICAPOOL"
-        }
-      }
-    },*/
     body: {
       text: "Here are your order details. Please review your order and tap 'Review and Pay' to complete the payment via Razorpay."
     },
@@ -38,7 +36,7 @@ async function sendRazorpayInteractiveMessage(to) {
     action: {
       name: "review_and_pay",
       parameters: {
-        reference_id: "order_ref_123", // You can generate dynamic reference IDs
+        reference_id: uniqueReferenceId,  // <-- dynamic
         type: "digital-goods",
         payment_settings: [
           {
@@ -47,7 +45,8 @@ async function sendRazorpayInteractiveMessage(to) {
               type: "razorpay",
               configuration_name: process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
               razorpay: {
-                receipt: "receipt-12345",
+                // Use a unique receipt for each new order
+                receipt: uniqueReceiptId,   // <-- dynamic
                 notes: {
                   promo: "testpromo"
                 }
@@ -57,13 +56,13 @@ async function sendRazorpayInteractiveMessage(to) {
         ],
         currency: "INR",
         total_amount: {
-          value: 210, // total_amount = 200 (subtotal) + 10 (tax)
-          offset: 100 // offset=100 means the above "value" is effectively "2.10" in the final display
+          value: 210,
+          offset: 100
         },
         order: {
           status: "pending",
           expiration: {
-            timestamp: expirationTimestamp.toString(), // Must be > current time + 300
+            timestamp: expirationTimestamp.toString(),
             description: "Order expires in 5 minutes"
           },
           items: [
@@ -99,13 +98,12 @@ async function sendRazorpayInteractiveMessage(to) {
             offset: 100,
             description: "5% tax"
           }
-          // shipping, discount, etc. omitted
         }
       }
     }
   };
 
-  // 3) Wrap the interactive payload into the overall WhatsApp message object
+  // 3) Wrap the interactive payload in the overall WhatsApp message
   const messagePayload = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
