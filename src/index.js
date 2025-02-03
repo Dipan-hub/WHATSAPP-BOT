@@ -53,7 +53,7 @@ app.post("/webhook", async (req, res) => {
                     handleProductOffer(from, msgBody);
                 } else if (msgBody && msgBody.includes("L_ID")) {
                     handleLiveOffer(from, msgBody);
-                } else if (msgBody && msgBody.includes("PP_ID")) {
+                } else if (msgBody && msgBody.includes("Z_ID")) {
                     handlePicapoolOffer(from, msgBody);
                 } else {
                     // Forward any other user message to admin
