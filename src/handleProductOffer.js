@@ -31,7 +31,7 @@ async function handleProductOffer(from, msgBody) {
     console.log("Extracted order details:", { orderItems, totalDominosPrice, baseprice });
 
     // Check that there is at least one order item and the total meets the minimum order amount.
-    if (orderItems.length > 0 && totalDominosPrice >= minOrderAmount) {
+    if (totalDominosPrice >= minOrderAmount) {
         const packingCharge = 20; // Fixed packing charge
 
         // Calculate tax based on the base price (before adjustments)
