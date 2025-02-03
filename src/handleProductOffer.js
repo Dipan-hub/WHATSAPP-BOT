@@ -2,6 +2,7 @@ const { sendWhatsAppMessage } = require('./whatsapp.js');
 const { sendListMessage } = require('./whatsappList.js');
 const { extractOrderDetails, calculateFinalPrice } = require('./orderProcessor.js');
 const { generatePaymentLink } = require('./payment.js');
+const { sendRazorpayInteractiveMessage } = require('./Whatsapp_razorpay_Integration');
 
 // Accessing environment variables from .env file
 const minOrderAmount = process.env.MIN_ORDER_AMOUNT;
@@ -108,6 +109,14 @@ async function handlePaymentConfirmation(from, selectedOption) {
                 from,
                 `Please complete your payment using the link below:\n\n🔗 ${paymentLink} \n\nMake sure to complete it within 5 minutes to avoid delays. Once payment is confirmed, we’ll place your order immediately. 🚀 \nLet us know once done! 😊`
             );
+
+
+            sendRazorpayInteractiveMessage(from)
+  .then((res) => console.log("Interactive message response:", res))
+  .catch((err) => console.error("Error in interactive message:", err)); 
+
+
+
         } catch (error) {
             console.error("Failed to generate payment link:", error);
             await sendWhatsAppMessage(from, "Failed to generate payment link.");
