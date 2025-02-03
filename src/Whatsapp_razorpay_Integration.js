@@ -20,10 +20,7 @@ async function sendRazorpayInteractiveMessage(to) {
       type: "image",
       image: {
         // Replace with your own image URL if available
-        link: "https://via.placeholder.com/150",
-        provider: {
-          name: "sample-provider"
-        }
+        link: "https://via.placeholder.com/150"
       }
     },
     body: {
