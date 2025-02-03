@@ -21,11 +21,11 @@ async function sendRazorpayInteractiveMessage(to) {
   const interactivePayload = {
     type: "order_details",
     header: {
-      "type": "image",
-      "image": {
-        "link": "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091178.jpg",
-        "provider": {
-          "name": "PICAPOOL"
+      type: "image",
+      image: {
+        link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091178.jpg",
+        provider: {
+          name: "PICAPOOL"
         }
       }
     },
