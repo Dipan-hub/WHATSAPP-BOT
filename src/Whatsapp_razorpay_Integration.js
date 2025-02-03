@@ -50,7 +50,7 @@ async function sendRazorpayInteractiveMessage(to) {
         ],
         currency: "INR",
         total_amount: {
-          value: 15750, // For example, 150.00 INR (value is in paise when offset is 100)
+          value: 210, // For example, 150.00 INR (value is in paise when offset is 100)
           offset: 100
         },
         order: {
@@ -65,7 +65,7 @@ async function sendRazorpayInteractiveMessage(to) {
               retailer_id: "001",
               name: "Product One",
               amount: {
-                value: 5000, // ₹50.00
+                value: 100, // ₹50.00
                 offset: 100
               },
               quantity: 1
@@ -74,18 +74,18 @@ async function sendRazorpayInteractiveMessage(to) {
               retailer_id: "002",
               name: "Product Two",
               amount: {
-                value: 10000, // ₹100.00
+                value: 100, // ₹100.00
                 offset: 100
               },
               quantity: 1
             }
           ],
           subtotal: {
-            value: 15000,
+            value: 200,
             offset: 100
           },
           tax: {
-            value: 750, // 5% tax of 15000 paise (i.e. ₹7.50)
+            value: 10, // 5% tax of 200 paise (i.e. ₹0.10)
             offset: 100,
             description: "5% tax"
           }
