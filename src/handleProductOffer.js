@@ -27,7 +27,7 @@ async function handleProductOffer(from, msgBody) {
     console.log(`Received product offer message from ${from}: ${msgBody}`);
     
     // Extract order details from the incoming message and log the result
-    const { orderItems, totalDominosPrice, baseprice } = extractOrderDetails(msgBody);
+    const { orderItems, totalDominosPrice, baseprice } = await extractOrderDetails(msgBody);
     console.log("Extracted order details:", { orderItems, totalDominosPrice, baseprice });
 
     // Check that there is at least one order item and the total meets the minimum order amount.
