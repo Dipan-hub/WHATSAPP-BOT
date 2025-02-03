@@ -2,7 +2,9 @@
 require("dotenv").config();
 const axios = require("axios");
 
-// Instead of a simple static function, we accept dynamic data:
+/**
+ * Send dynamic order_details with real item name and image
+ */
 async function sendDynamicRazorpayInteractiveMessage({
   to,
   referenceId,
@@ -12,22 +14,19 @@ async function sendDynamicRazorpayInteractiveMessage({
   taxDescription,
   totalPayable
 }) {
-  /**
-   * WhatsApp expects `value` in *integer* and `offset=100` if using two decimals.
-   * For example, ₹210 => value=21000, offset=100 => displayed as "210.00".
-   */
-  //const totalInPaise = Math.round(totalPayable * 100);
-  const taxInPaise = Math.round(taxAmount * 100);
-  const subInPaise = Math.round(subtotal * 100);
-  const totalInPaise = taxInPaise+subInPaise;
+  // Convert ₹ to paise
+  const totalInPaise = Math.round(totalPayable * 100);
+  const taxInPaise   = Math.round(taxAmount   * 100);
+  const subInPaise   = Math.round(subtotal    * 100);
 
-  // Build items array for the order_details
-  // Each item expects { name, amount {value, offset}, quantity, image {link} } if you want images
+  // Build items array for WhatsApp
   const whatsappItems = items.map((item) => {
-    const itemPriceInPaise = Math.round(item.mrp * 100);
+    const itemPriceInPaise = Math.round(item.price * 100);
     return {
-      name: `Product ${item.pID}`,
+      // Use the actual name from the CSV
+      name: item.name, 
       image: {
+        // Use the actual link from the CSV if present, else fallback
         link: item.image || "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091179.jpg"
       },
       amount: {
@@ -38,13 +37,12 @@ async function sendDynamicRazorpayInteractiveMessage({
     };
   });
 
-  const expirationTimestamp = Math.floor(Date.now() / 1000) + 300; // 5 mins from now
+  const expirationTimestamp = Math.floor(Date.now() / 1000) + 300; // 5 min
 
   const interactivePayload = {
     type: "order_details",
     body: {
-      text:
-        "Here are your order details. Please review and tap 'Review and Pay' to complete the payment."
+      text: "Here are your order details. Tap 'Review and Pay' to proceed."
     },
     footer: {
       text: "Order expires in 5 minutes."
@@ -52,21 +50,17 @@ async function sendDynamicRazorpayInteractiveMessage({
     action: {
       name: "review_and_pay",
       parameters: {
-        reference_id: referenceId, // Make sure it's unique per order
+        reference_id: referenceId,
         type: "digital-goods",
         payment_settings: [
           {
             type: "payment_gateway",
             payment_gateway: {
               type: "razorpay",
-              configuration_name:
-                process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
+              configuration_name: process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
               razorpay: {
-                // You can pass a unique receipt or order_id if you want
                 receipt: "receipt_" + referenceId,
-                notes: {
-                  promo: "testpromo"
-                }
+                notes: { promo: "testpromo" }
               }
             }
           }
@@ -92,7 +86,6 @@ async function sendDynamicRazorpayInteractiveMessage({
             offset: 100,
             description: taxDescription || "Tax"
           }
-          // shipping/discount can be added similarly
         }
       }
     }
@@ -100,30 +93,27 @@ async function sendDynamicRazorpayInteractiveMessage({
 
   const messagePayload = {
     messaging_product: "whatsapp",
-    recipient_type: "individual",
-    to: to,
+    to,
     type: "interactive",
     interactive: interactivePayload
   };
 
-  const whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const whatsappAccessToken = process.env.WHATSAPP_TOKEN;
-  if (!whatsappAccessToken) throw new Error("Missing WHATSAPP_TOKEN.");
-  if (!whatsappPhoneNumberId) throw new Error("Missing WHATSAPP_PHONE_NUMBER_ID.");
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const accessToken   = process.env.WHATSAPP_TOKEN;
 
-  const apiUrl = `https://graph.facebook.com/v16.0/${whatsappPhoneNumberId}/messages`;
+  const apiUrl = `https://graph.facebook.com/v16.0/${phoneNumberId}/messages`;
 
   try {
     const response = await axios.post(apiUrl, messagePayload, {
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${whatsappAccessToken}`
+        Authorization: `Bearer ${accessToken}`
       }
     });
     console.log("Razorpay order_details message sent:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Error sending Razorpay interactive message:", error.response?.data || error.message);
+    console.error("Error sending dynamic Razorpay message:", error.response?.data || error.message);
     throw error;
   }
 }
