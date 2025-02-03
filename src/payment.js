@@ -7,7 +7,7 @@ async function generatePaymentLink(amount, name = "Dipan", phone = "8917602924")
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID;  // Store this in your .env file
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET; // Store this in your .env file
 
-    const amountInPaise = amount * 100;  // Convert to paise
+    const amountInPaise =Math.round( amount * 100);  // Convert to paise
 
     const paymentLinkData = {
         amount: amountInPaise,
