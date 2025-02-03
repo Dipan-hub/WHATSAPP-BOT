@@ -67,7 +67,7 @@ async function sendRazorpayInteractiveMessage(to) {
             {
               name: "Product One",
               image: {
-                link: "https://example.com/product1.jpg"
+                link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091147.jpg"
               },
               amount: {
                 value: 100, // 1.00 if offset=100
@@ -78,7 +78,7 @@ async function sendRazorpayInteractiveMessage(to) {
             {
               name: "Product Two",
               image: {
-                link: "https://example.com/product2.jpg"
+                link: "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091179.jpg"
               },
               amount: {
                 value: 100, // 1.00 if offset=100
