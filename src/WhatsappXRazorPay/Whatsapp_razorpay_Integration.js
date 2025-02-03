@@ -16,9 +16,10 @@ async function sendDynamicRazorpayInteractiveMessage({
    * WhatsApp expects `value` in *integer* and `offset=100` if using two decimals.
    * For example, ₹210 => value=21000, offset=100 => displayed as "210.00".
    */
-  const totalInPaise = Math.round(totalPayable * 100);
+  //const totalInPaise = Math.round(totalPayable * 100);
   const taxInPaise = Math.round(taxAmount * 100);
   const subInPaise = Math.round(subtotal * 100);
+  const totalInPaise = taxInPaise+subInPaise;
 
   // Build items array for the order_details
   // Each item expects { name, amount {value, offset}, quantity, image {link} } if you want images
@@ -26,9 +27,9 @@ async function sendDynamicRazorpayInteractiveMessage({
     const itemPriceInPaise = Math.round(item.mrp * 100);
     return {
       name: `Product ${item.pID}`,
-      //image: {
-      //  link: item.image || "https://example.com/no-image.jpg"
-      //},
+      image: {
+        link: item.image || "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091179.jpg"
+      },
       amount: {
         value: itemPriceInPaise,
         offset: 100
