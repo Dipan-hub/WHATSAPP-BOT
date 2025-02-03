@@ -62,107 +62,68 @@ function forwardMessageToAdmin(from, msgBody) {
 
 // This route is your main webhook endpoint for WhatsApp
 app.post("/webhook", async (req, res) => {
-  try {
-    const body = req.body;
-    if (!body.object) {
-      return res.sendStatus(404);
-    }
-
-    // The standard structure: body.entry[0].changes[0].value
-    const webhookEvent = body.entry?.[0]?.changes?.[0]?.value;
-    if (!webhookEvent) {
-      console.warn("Webhook event structure is invalid.");
-      return res.sendStatus(404);
-    }
-
-    // 1) Check if there's a "statuses" array indicating a payment update
-    if (webhookEvent.statuses) {
-      const statuses = webhookEvent.statuses;
-      for (let statusObj of statuses) {
-        if (statusObj.type === "payment") {
-          // We have a payment notification from WhatsApp
-          console.log("PAYMENT WEBHOOK RECEIVED:", JSON.stringify(statusObj, null, 2));
-          
-          const { status: paymentStatus, payment } = statusObj;
-          if (payment) {
-            const { reference_id, transaction } = payment;
-
-            console.log(`Payment for reference_id ${reference_id} is now ${paymentStatus}.`);
-            if (transaction) {
-              console.log("Transaction ID:", transaction.id);
-              console.log("Transaction status:", transaction.status); // success/failed/pending
-            }
-
-            // Here you’d normally update your DB with the new payment status...
-            // e.g. updateOrder(reference_id, paymentStatus);
-
-            // If captured or success, you might send a confirmation message to user
-            if (paymentStatus === "captured") {
-              // statusObj.recipient_id is the user’s phone in some cases, or you can store from earlier
-              const userWaId = statusObj.recipient_id; 
-              // Send them a text or "order_status" message if needed
-              sendMessage(userWaId, `Payment received for order: ${reference_id}!`);
-            }
+    try {
+      const body = req.body;
+      if (!body.object) return res.sendStatus(404);
+  
+      const webhookEvent = body.entry?.[0]?.changes?.[0]?.value;
+      if (!webhookEvent) return res.sendStatus(404);
+  
+      // Check for "payment" statuses first (optional)
+      if (webhookEvent.statuses) {
+        // handle payment updates from WhatsApp
+        webhookEvent.statuses.forEach((status) => {
+          if (status.type === 'payment') {
+            console.log("Payment Status Update:", JSON.stringify(status, null, 2));
+            // You can handle capturing or logging transaction details here
+          }
+        });
+      }
+  
+      // Check if there's a message
+      const messages = webhookEvent.messages;
+      if (messages && messages.length > 0) {
+        const message = messages[0];
+        const from = message.from;
+        const msgBody = message.text?.body;
+  
+        if (from === ADMIN_NUMBER) {
+          // Admin logic
+        } else {
+          // Forward user message to admin
+          forwardMessageToAdmin(from, msgBody);
+  
+          if (message.interactive && message.interactive.type === "list_reply") {
+            // If user selected an option from a list
+            const { title, id } = message.interactive.list_reply;
+            // e.g. handlePaymentConfirmation
+            forwardMessageToAdmin(from,message.interactive.list_reply.ttile);
+            await handlePaymentConfirmation(from, id);
+  
+          } else if (msgBody && msgBody.includes("P_ID")) {
+            // user typed something with product IDs
+            await handleProductOffer(from, msgBody);
+  
+          } else if (msgBody && msgBody.includes("L_ID")) {
+            // some other handler
+            await handleLiveOffer(from, msgBody);
+  
+          } else if (msgBody && msgBody.includes("Z_ID")) {
+            // another handler
+            await handlePicapoolOffer(from, msgBody);
+  
+          } else {
+            // fallback
           }
         }
       }
+  
+      res.sendStatus(200);
+    } catch (err) {
+      console.error("Error in webhook:", err);
+      res.sendStatus(500);
     }
-
-    // 2) Check for incoming messages
-    const messages = webhookEvent.messages;
-    if (messages && messages.length > 0) {
-      const message = messages[0];
-      const from = message.from; // WhatsApp phone of the sender
-      const msgBody = message.text?.body;
-
-      // If the admin is replying to a user
-      if (from === ADMIN_NUMBER && msgBody) {
-        const responseParts = msgBody.split(" - ");
-        if (responseParts.length === 2) {
-          const targetUser = responseParts[0].trim();
-          const replyMessage = responseParts[1].trim();
-          sendMessage(targetUser, replyMessage);
-        } else {
-          console.error("Admin message format is incorrect. Use 'phone_number - message_body'.");
-        }
-      } else {
-        // Normal user message, forward to admin for monitoring
-        forwardMessageToAdmin(from, msgBody);
-
-        // Example commands
-        if (message.interactive && message.interactive.type === "list_reply") {
-          forwardMessageToAdmin(from, message.interactive.list_reply.title);
-          handlePaymentConfirmation(from, message.interactive.list_reply.id);
-        } 
-        else if (msgBody && msgBody.includes("P_ID")) {
-          handleProductOffer(from, msgBody);
-        }
-        else if (msgBody && msgBody.includes("L_ID")) {
-          handleLiveOffer(from, msgBody);
-        }
-        else if (msgBody && msgBody.includes("Z_ID")) {
-          handlePicapoolOffer(from, msgBody);
-        }
-        else if (msgBody && msgBody.toLowerCase().includes("pay now")) {
-          // EXAMPLE: If user types "pay now", we trigger the Razorpay interactive message
-          // You can change this logic to whatever you want
-          await sendRazorpayInteractiveMessage(from);
-        } 
-        else {
-          // handle other user messages
-          // forwardMessageToAdmin(from, msgBody); // you already do so above
-        }
-      }
-    }
-
-    // Always respond 200 to let WhatsApp know we received the webhook
-    return res.sendStatus(200);
-
-  } catch (error) {
-    console.error("Webhook error:", error);
-    return res.sendStatus(500);
-  }
-});
+  });
 
 // Optional GET route if you do verification handshake
 app.get("/webhook", (req, res) => {

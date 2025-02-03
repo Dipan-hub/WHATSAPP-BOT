@@ -15,38 +15,32 @@ const EXTRA_DISCOUNT = 60;       // Example discount
  * 1) Fetch & parse CSV from Google Sheets, returning a mapping like { '57': 299, '58': 259, ... }.
  */
 async function fetchPriceData() {
-  console.log('--- [fetchPriceData] Fetching CSV from Google Sheets...');
-  const response = await fetch(SHEET_CSV_URL);
-  const csvText = await response.text();
-  
-  console.log('--- [fetchPriceData] Parsing CSV with PapaParse...');
-  const parsed = Papa.parse(csvText, {
-    header: true,        // uses the first row as keys
-    dynamicTyping: true, // converts numeric strings to numbers
-    skipEmptyLines: true
-  });
-
-  console.log(`--- [fetchPriceData] Rows parsed: ${parsed.data.length}`);
-  
-  // Create an object like { '57': 299, '58': 259, ... }
-  const priceMap = {};
-  
-  parsed.data.forEach((row, idx) => {
-    // "Product" and "Price (Original)" are the columns in your Google Sheet
-    const productId = row['Product'];
-    const originalPrice = row['Price (Original)'];
+    const response = await fetch(SHEET_CSV_URL);
+    const csvText = await response.text();
     
-    // Log each row for debugging (optional)
-    // console.log(`Row #${idx}`, row);
-
-    if (productId && originalPrice) {
-      priceMap[productId] = originalPrice;
-    }
-  });
-
-  console.log('--- [fetchPriceData] Finished building priceMap:', priceMap);
-  return priceMap;
-}
+    const parsed = Papa.parse(csvText, {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true
+    });
+  
+    const priceMap = {};
+    parsed.data.forEach((row) => {
+      const productId = row['Product'];
+      const originalPrice = row['Price (Original)'];
+      const imageLink = row['Image URL']; // <-- If your CSV has an "Image Link" column
+  
+      if (productId && originalPrice) {
+        priceMap[productId] = {
+          price: originalPrice,
+          image: imageLink || "" 
+        };
+      }
+    });
+  
+    return priceMap;
+  }
+  
 
 /**
  * 2) Extract P_IDs from the user's message, sum MRP from the Google Sheets data,
