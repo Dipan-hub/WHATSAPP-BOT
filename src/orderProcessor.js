@@ -127,7 +127,7 @@ async function extractOrderDetails(message) {
  * 3) Calculate final price *with* Picapool discount on each item, plus tax, packing fee, minus extra discount.
  */
 function calculateFinalPrice(orderItems, extraDiscount = EXTRA_DISCOUNT) {
-  console.log("=== [calculateFinalPrice] Processing each order item for Picapool discount ===");
+  /*console.log("=== [calculateFinalPrice] Processing each order item for Picapool discount ===");
   
   let picapoolTotal = 0;
   
@@ -154,6 +154,7 @@ function calculateFinalPrice(orderItems, extraDiscount = EXTRA_DISCOUNT) {
     tax: Number(tax.toFixed(2)),
     finalPrice: Number(finalPrice.toFixed(2))
   };
+  */
 }
 
 // Export your methods
