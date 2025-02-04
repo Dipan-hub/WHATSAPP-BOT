@@ -4,7 +4,7 @@ const { extractOrderDetails, calculateFinalPrice } = require('./orderProcessor.j
 const { sendListMessage } = require('./whatsappList.js');
 
 async function handleIncomingMessage(from, message) {
-    const { orderItems, totalDominosPrice } = extractOrderDetails(message);
+    /*const { orderItems, totalDominosPrice } = extractOrderDetails(message);
     
     if (orderItems.length === 0) {
         await sendWhatsAppMessage(from, "Oops! 😓 We couldn't detect any valid order items. Please ensure your order contains valid P_IDs.");
@@ -28,6 +28,7 @@ async function handleIncomingMessage(from, message) {
 
     // Send Location Details
     await sendListMessage(from);
+    */
 }
 
 module.exports = { handleIncomingMessage };

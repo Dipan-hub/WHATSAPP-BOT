@@ -97,7 +97,7 @@ app.post("/webhook", async (req, res) => {
             // If user selected an option from a list
             const { title, id } = message.interactive.list_reply;
             // e.g. handlePaymentConfirmation
-            forwardMessageToAdmin(from,message.interactive.list_reply.ttile);
+            forwardMessageToAdmin(from,message.interactive.list_reply.title);
             await handlePaymentConfirmation(from, id);
   
           } else if (msgBody && msgBody.includes("P_ID")) {
