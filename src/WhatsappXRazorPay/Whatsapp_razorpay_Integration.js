@@ -5,9 +5,12 @@
 require("dotenv").config();
 const axios = require("axios");
 
-// A single fallback image that we know is valid JPG/PNG in our S3 bucket
-const FALLBACK_IMAGE_URL =
-  "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091178.jpg";
+/**
+ * Make sure this fallback URL returns a valid PNG or JPEG,
+ * not a WebP, SVG, or any other format. 
+ * You can replace this with your own reliable PNG/JPG.
+ */
+const FALLBACK_IMAGE_URL = "https://via.placeholder.com/600x400.png";
 
 /**
  * Send a dynamic order_details message to WhatsApp with:
@@ -16,6 +19,17 @@ const FALLBACK_IMAGE_URL =
  *  - Delivery fee (shown as a separate line item)
  *  - Tax line
  *  - Final total = Subtotal + Delivery + Tax
+ *
+ * @param {Object} params
+ * @param {string} params.to - The WhatsApp number in full format
+ * @param {string} params.referenceId - A unique reference ID for the order
+ * @param {Array}  params.items - Array of items => [ { name, price, image }, ... ]
+ *   - 'price' is the final discounted price for each product
+ * @param {number} params.subtotal - Sum of discounted product prices (in ₹)
+ * @param {number} params.taxAmount - The total tax portion (in ₹)
+ * @param {string} [params.taxDescription] - Optional label for tax (e.g. "5% GST")
+ * @param {number} params.delivery - Delivery fee amount (in ₹)
+ * @param {number} params.totalPayable - Final total = subtotal + delivery + tax (in ₹)
  */
 async function sendDynamicRazorpayInteractiveMessage({
   to,
@@ -31,10 +45,10 @@ async function sendDynamicRazorpayInteractiveMessage({
   console.log("to:", to);
   console.log("referenceId:", referenceId);
   console.log("items (array):", items);
-  console.log("subtotal (arg) => should match sum of discounted product prices:", subtotal);
-  console.log("taxAmount (arg):", taxAmount);
-  console.log("delivery (arg):", delivery);
-  console.log("totalPayable (arg) => should be (subtotal + delivery + tax):", totalPayable);
+  console.log("subtotal:", subtotal);
+  console.log("taxAmount:", taxAmount);
+  console.log("delivery:", delivery);
+  console.log("totalPayable:", totalPayable);
 
   // 1) Convert the function inputs from ₹ to paise
   const taxInPaise      = Math.round(taxAmount * 100);
@@ -42,13 +56,15 @@ async function sendDynamicRazorpayInteractiveMessage({
 
   // 2) Build array of product line-items for WhatsApp
   let sumOfProductsInPaise = 0;
-
   const productLineItems = items.map((item, index) => {
     const itemPriceInPaise = Math.round(item.price * 100);
     sumOfProductsInPaise += itemPriceInPaise;
 
-    // If there's no image or we suspect an invalid link, use fallback
-    const safeImageLink = item.image || FALLBACK_IMAGE_URL;
+    // If no image or if we suspect it could be .webp, fall back to our safe PNG/JPG
+    let safeImageLink = item.image;
+    if (!safeImageLink || safeImageLink.endsWith(".webp")) {
+      safeImageLink = FALLBACK_IMAGE_URL;
+    }
 
     console.log(
       ` -> item[${index}] "${item.name}": price=${item.price} => ${itemPriceInPaise} paise, image=${safeImageLink}`
@@ -70,7 +86,7 @@ async function sendDynamicRazorpayInteractiveMessage({
   console.log(`[DEBUG] sumOfProductsInPaise (from items) = ${sumOfProductsInPaise}`);
 
   // 3) Add "Delivery Fee" as a separate line-item
-  //    Also fallback to the same safe image for reliability
+  //    We also use the same fallback image to avoid any .webp issues
   const deliveryItem = {
     name: "Delivery Fee",
     image: {
@@ -86,15 +102,15 @@ async function sendDynamicRazorpayInteractiveMessage({
   // Combine product items + the delivery fee item
   const whatsappItems = [...productLineItems, deliveryItem];
 
-  // 4) Official subtotal
+  // 4) The official "subtotal" for WhatsApp is sum of the item line-items
   const officialSubtotalInPaise = sumOfProductsInPaise + deliveryInPaise;
   console.log(`[DEBUG] officialSubtotalInPaise (products + delivery) = ${officialSubtotalInPaise}`);
 
-  // 5) The final total
+  // 5) The final total = officialSubtotalInPaise + taxInPaise
   const totalInPaise = officialSubtotalInPaise + taxInPaise;
   console.log(`[DEBUG] totalInPaise (subtotal + tax) = ${totalInPaise}`);
 
-  // 6) Double-check
+  // 6) Check for mismatch with user-passed totalPayable
   const callerExpectedTotalPaise = Math.round(totalPayable * 100);
   if (callerExpectedTotalPaise !== totalInPaise) {
     console.warn(
@@ -105,7 +121,7 @@ async function sendDynamicRazorpayInteractiveMessage({
   }
 
   // 7) Build the interactive 'order_details' payload
-  const expirationTimestamp = Math.floor(Date.now() / 1000) + 300; // 5 minutes from now
+  const expirationTimestamp = Math.floor(Date.now() / 1000) + 300; // 5 minutes
   const interactivePayload = {
     type: "order_details",
     body: {
@@ -124,7 +140,8 @@ async function sendDynamicRazorpayInteractiveMessage({
             type: "payment_gateway",
             payment_gateway: {
               type: "razorpay",
-              configuration_name: process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
+              configuration_name:
+                process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
               razorpay: {
                 receipt: "receipt_" + referenceId,
                 notes: { promo: "testpromo" }
@@ -146,7 +163,7 @@ async function sendDynamicRazorpayInteractiveMessage({
           },
           // Our line items (products + delivery)
           items: whatsappItems,
-          // The "subtotal" in WhatsApp is the sum of line items (in paise)
+          // The "subtotal" in WhatsApp
           subtotal: {
             value: officialSubtotalInPaise,
             offset: 100
@@ -170,14 +187,14 @@ async function sendDynamicRazorpayInteractiveMessage({
     interactive: interactivePayload
   };
 
-  console.log("[DEBUG] Final messagePayload to send =>", JSON.stringify(messagePayload, null, 2));
+  console.log("[DEBUG] Final messagePayload =>", JSON.stringify(messagePayload, null, 2));
 
   // 9) Use your phone number ID and token from environment
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const accessToken   = process.env.WHATSAPP_TOKEN;
   const apiUrl        = `https://graph.facebook.com/v16.0/${phoneNumberId}/messages`;
 
-  // 10) Send it via axios
+  // 10) Send via axios
   try {
     const response = await axios.post(apiUrl, messagePayload, {
       headers: {
@@ -188,10 +205,7 @@ async function sendDynamicRazorpayInteractiveMessage({
     console.log("Razorpay order_details message sent successfully:", response.data);
     return response.data;
   } catch (error) {
-    console.error(
-      "Error sending dynamic Razorpay message:",
-      error.response?.data || error.message
-    );
+    console.error("Error sending dynamic Razorpay message:", error.response?.data || error.message);
     throw error;
   }
 }
