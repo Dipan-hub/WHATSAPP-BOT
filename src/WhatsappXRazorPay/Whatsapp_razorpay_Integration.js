@@ -79,7 +79,7 @@ async function sendDynamicRazorpayInteractiveMessage({
   const deliveryItem = {
     name: "Delivery Fee",
     image: {
-      link: FALLBACK_IMAGE_URL
+      link: "https://static.vecteezy.com/system/resources/thumbnails/019/796/973/small_2x/motorbike-delivery-man-logo-icon-symbol-template-free-vector.jpg"
     },
     amount: {
       value: deliveryInPaise,
