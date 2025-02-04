@@ -10,7 +10,7 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQZSZaOjP
 const ADDITIONAL_DISCOUNT = 60;    // Subtracted once from total MRP sum
 const PICAPOOL_DISCOUNT_RATE = 0.1; // 10% discount
 const TAX_RATE = 0.05;             // 5% tax
-const DELIVERY_FEE = 45;           // Flat delivery cost
+const DELIVERY_FEE = 0;           // Flat delivery cost
 
 /**
  * 1) Fetch & parse CSV from Google Sheets, returning a mapping like { '57': 299, '58': 259, ... }.

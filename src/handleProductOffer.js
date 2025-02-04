@@ -22,7 +22,7 @@ function getSessionData(userId) {
 async function handleProductOffer(from, msgBody) {
     console.log(`Received product offer from ${from}: ${msgBody}`);
     
-    const { orderItems, sumSalePrice, basePrice } = await extractOrderDetails(msgBody);
+    const { orderItems, sumSalePrice, basePrice ,finalPicapoolPrice } = await extractOrderDetails(msgBody);
     console.log("Extracted order details:", { orderItems, sumSalePrice, basePrice });
 
     const minOrderAmount = process.env.MIN_ORDER_AMOUNT || 100; 
@@ -33,7 +33,7 @@ async function handleProductOffer(from, msgBody) {
         const tax = basePrice * 0.05;  
 
         // Example final price calculation
-        let finalPrice = sumSalePrice * 0.9; // 10% discount
+        let finalPrice = (basePrice - additionalDiscount)* 1.05 + packingCharge; // 10% discount
         if (finalPrice < 1) {
             finalPrice = 1;
         }
@@ -44,9 +44,9 @@ async function handleProductOffer(from, msgBody) {
 - Additional Discount: ₹${additionalDiscount}
 - Tax (5%): ₹${tax.toFixed(2)}
 - Packing Charge: ₹${packingCharge}
-- Total (Before Discount): ₹${sumSalePrice.toFixed(2)}
+- Total (Before PP Discount): ₹${finalPrice.toFixed(2)}
 
-**Final Price** (after 10% discount): ₹${finalPrice.toFixed(2)}
+**Final Price** (after 10% discount): ₹${finalPicapoolPrice.toFixed(2)}
         `;
 
         await sendWhatsAppMessage(from, breakdown);
