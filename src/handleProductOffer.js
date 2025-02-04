@@ -26,7 +26,7 @@ async function handleProductOffer(from, msgBody) {
     console.log("Extracted order details:", { orderItems, sumSalePrice, basePrice });
 
     const minOrderAmount = process.env.MIN_ORDER_AMOUNT || 100; 
-    const additionalDiscount = process.env.ADDITIONAL_DISCOUNT || 50;
+    const additionalDiscount = 30 ; //process.env.ADDITIONAL_DISCOUNT || 50;
 
     if (sumSalePrice >= minOrderAmount) {
         const packingCharge = 20; 
@@ -41,7 +41,7 @@ async function handleProductOffer(from, msgBody) {
         const breakdown = `🎉 **Good news!** You've unlocked an additional discount of ₹${additionalDiscount}!
 
 - Base Price: ₹${basePrice}
-- Additional Discount: ₹${additionalDiscount}
+- Additional Discountdddddddddddd: ₹${additionalDiscount}
 - Tax (5%): ₹${tax.toFixed(2)}
 - Packing Charge: ₹${packingCharge}
 - The Best Dominos could have given you Total (Before PP Discount): ₹${finalPrice.toFixed(2)}
