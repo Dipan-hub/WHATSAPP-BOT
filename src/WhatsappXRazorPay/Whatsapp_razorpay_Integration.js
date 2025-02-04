@@ -1,13 +1,28 @@
-/******************************************************
- * // src/WhatsappXRazorPay/Whatsapp_razorpay_Integration.js
- * Whatsapp_razorpay_Integration.js
- ******************************************************/
 require("dotenv").config();
 const axios = require("axios");
 
 // A known-good fallback image (PNG/JPG).
 // Make sure this link truly returns PNG/JPEG, not WebP.
 const FALLBACK_IMAGE_URL = "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091178.jpg";
+
+// Helper function to split a long name into 2 lines
+function formatItemName(rawName) {
+  if (!rawName) return "No Name";
+
+  // If it's not too long, return as is
+  const LINE_CUTOFF = 30; // First line max length
+  if (rawName.length <= LINE_CUTOFF) {
+    return rawName;
+  }
+
+  // Otherwise, split into two lines
+  const line1 = rawName.substring(0, LINE_CUTOFF);
+  // We'll show the next chunk on a second line; choose your own limit
+  const line2 = rawName.substring(LINE_CUTOFF, LINE_CUTOFF * 2);
+
+  // If there's more after the second line, we *simply* cut it off (no "..." added).
+  return line1 + "\n" + line2;
+}
 
 /**
  * Send a dynamic order_details message to WhatsApp with:
@@ -56,12 +71,15 @@ async function sendDynamicRazorpayInteractiveMessage({
       safeImageLink = FALLBACK_IMAGE_URL;
     }
 
+    // Format the name to 2 lines if it's very long
+    const safeItemName = formatItemName(item.name);
+
     console.log(
-      ` -> item[${index}] "${item.name}": price=${item.price} => ${itemPriceInPaise} paise, image=${safeImageLink}`
+      ` -> item[${index}] "${safeItemName}": price=${item.price} => ${itemPriceInPaise} paise, image=${safeImageLink}`
     );
 
     return {
-      name: item.name || "No Name",
+      name: safeItemName,
       image: {
         link: safeImageLink
       },
@@ -110,14 +128,14 @@ async function sendDynamicRazorpayInteractiveMessage({
   }
 
   // 7) Build the interactive 'order_details' payload
-  const expirationTimestamp = Math.floor(Date.now() / 1000) + 300; // 5 minutes from now
+  const expirationTimestamp = Math.floor(Date.now() / 1000) + 600; // 10 minutes from now
   const interactivePayload = {
     type: "order_details",
     body: {
       text: "Here are your order details. Tap 'Review and Pay' to proceed."
     },
     footer: {
-      text: "Order expires in 5 minutes."
+      text: "Order expires in 10 minutes."
     },
     action: {
       name: "review_and_pay",
@@ -147,7 +165,7 @@ async function sendDynamicRazorpayInteractiveMessage({
           status: "pending",
           expiration: {
             timestamp: expirationTimestamp.toString(),
-            description: "Order expires in 5 minutes"
+            description: "Order expires in 10 minutes"
           },
           // Our line items
           items: whatsappItems,
