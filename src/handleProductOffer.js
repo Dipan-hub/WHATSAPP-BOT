@@ -87,13 +87,13 @@ async function handlePaymentConfirmation(from, selectedOption) {
 
         // Suppose your final price already includes tax & packingCharge, 
         // but let's say we also have a fixed delivery = 45
-        const delivery = 20;
+        //const delivery = 20;
 
-        const { orderItems, basePrice, tax, finalPrice } = sessionData;
+        const { orderItems, basePrice, tax, finalPicapoolPrice } = sessionData;
         const referenceId = "ref_" + Date.now();
 
         // If your finalPrice does NOT include delivery, then do:
-        const totalPayable = finalPrice + delivery;
+        const totalPayable = finalPicapoolPrice;
 
         // Otherwise, if finalPrice already includes it, set totalPayable = finalPrice
         // and pass delivery = 0.
