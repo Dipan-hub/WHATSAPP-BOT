@@ -7,21 +7,28 @@ const axios = require("axios");
 
 /**
  * Send a dynamic order_details message to WhatsApp with:
- *  - All product items and each discounted sale price
- *  - Subtotal (sum of product sale prices)
- *  - Delivery fee (separate line item so sum matches)
+ *  - All product items and each final (discounted) sale price
+ *  - Subtotal (sum of product prices)
+ *  - Delivery fee (shown as a separate line item)
  *  - Tax line
  *  - Final total = Subtotal + Delivery + Tax
+ *
+ * WhatsApp checks that:
+ *   sum(items[].amount.value * quantity) + ... = 'subtotal.value'
+ *   'subtotal.value' + 'tax.value' = 'total_amount.value'
+ *
+ * So we must ensure the numeric sums match exactly.
  *
  * @param {Object} params
  * @param {string} params.to - The WhatsApp number in full format (e.g. "91XXXXXXXXXX")
  * @param {string} params.referenceId - A unique reference ID for the order
  * @param {Array}  params.items - Array of items => [ { name, price, image }, ... ]
- * @param {number} params.subtotal - Sum of all discounted product prices
- * @param {number} params.taxAmount - The total tax portion
- * @param {string} [params.taxDescription] - Optional label for tax (e.g., "5% GST")
- * @param {number} params.delivery - Delivery fee amount
- * @param {number} params.totalPayable - Final total = subtotal + delivery + tax
+ *   - 'price' here is the final discounted price for each product
+ * @param {number} params.subtotal - Sum of discounted product prices (in ₹)
+ * @param {number} params.taxAmount - The total tax portion (in ₹)
+ * @param {string} [params.taxDescription] - Optional label for tax (e.g. "5% GST")
+ * @param {number} params.delivery - Delivery fee amount (in ₹)
+ * @param {number} params.totalPayable - Final total = subtotal + delivery + tax (in ₹)
  */
 async function sendDynamicRazorpayInteractiveMessage({
   to,
@@ -33,21 +40,35 @@ async function sendDynamicRazorpayInteractiveMessage({
   delivery,
   totalPayable
 }) {
-  // Convert ₹ to paise
-  const taxInPaise       = Math.round(taxAmount   * 100);
-  const subInPaise       = Math.round(subtotal    * 100);
-  const deliveryInPaise  = Math.round(delivery    * 100);
-  const totalInPaise     = Math.round(totalPayable * 100);
+  console.log("======== [sendDynamicRazorpayInteractiveMessage] ========");
+  console.log("to:", to);
+  console.log("referenceId:", referenceId);
+  console.log("items (array):", items);
+  console.log("subtotal (arg) => should match sum of discounted product prices:", subtotal);
+  console.log("taxAmount (arg):", taxAmount);
+  console.log("delivery (arg):", delivery);
+  console.log("totalPayable (arg) => should be (subtotal + delivery + tax):", totalPayable);
 
-  // 1) Build array of product line-items
-  const productLineItems = items.map((item) => {
-    // 'item.price' is the discounted price for this product
+  // 1) Convert the function inputs from ₹ to paise
+  const taxInPaise      = Math.round(taxAmount * 100);
+  const deliveryInPaise = Math.round(delivery  * 100);
+  // We'll compute the sum of product line items from the "items" array,
+  // rather than trusting the passed-in `subtotal` to avoid mismatch.
+
+  // 2) Build array of product line-items for WhatsApp
+  let sumOfProductsInPaise = 0;
+
+  const productLineItems = items.map((item, index) => {
     const itemPriceInPaise = Math.round(item.price * 100);
+    sumOfProductsInPaise += itemPriceInPaise;
+
+    console.log(` -> item[${index}] "${item.name}": price=${item.price} => ${itemPriceInPaise} paise`);
 
     return {
-      name: item.name,
+      name: item.name || "No Name",
       image: {
-        link: item.image || "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091179.jpg"
+        link: item.image ||
+          "https://picapool-store.s3.ap-south-1.amazonaws.com/images/pool/scaled_1000091179.jpg"
       },
       amount: {
         value: itemPriceInPaise,
@@ -57,11 +78,13 @@ async function sendDynamicRazorpayInteractiveMessage({
     };
   });
 
-  // 2) Add "Delivery" as a separate line-item, so the math lines up in WhatsApp
+  console.log(`[DEBUG] sumOfProductsInPaise (from items) = ${sumOfProductsInPaise}`);
+
+  // 3) Add "Delivery Fee" as a separate line-item, so the math lines up in WhatsApp
   const deliveryItem = {
     name: "Delivery Fee",
     image: {
-      link: "https://cdn-icons-png.flaticon.com/512/1428/1428436.png" // or your own small icon
+      link: "https://cdn-icons-png.flaticon.com/512/1428/1428436.png"
     },
     amount: {
       value: deliveryInPaise,
@@ -70,20 +93,33 @@ async function sendDynamicRazorpayInteractiveMessage({
     quantity: 1
   };
 
-  // Combine product items + delivery item
+  // Combine product items + the delivery fee item
   const whatsappItems = [...productLineItems, deliveryItem];
 
-  // The "subtotal" in WhatsApp must match the sum of all item line-items (products + delivery).
-  // So let's define officialSubtotalInPaise as subInPaise + deliveryInPaise:
-  const officialSubtotalInPaise = subInPaise + deliveryInPaise;
+  // 4) The official "subtotal" that WhatsApp expects is the sum of the item line-items
+  //    i.e. product sum + delivery. We'll call this officialSubtotalInPaise:
+  const officialSubtotalInPaise = sumOfProductsInPaise + deliveryInPaise;
 
-  // Then total = officialSubtotal + tax
-  // This must match the totalInPaise we pass to "total_amount"
-  // i.e. totalInPaise = officialSubtotalInPaise + taxInPaise
+  console.log(`[DEBUG] officialSubtotalInPaise (products + delivery) = ${officialSubtotalInPaise}`);
 
+  // 5) The final total = officialSubtotalInPaise + taxInPaise
+  const totalInPaise = officialSubtotalInPaise + taxInPaise;
+
+  console.log(`[DEBUG] totalInPaise (subtotal + tax) = ${totalInPaise}`);
+
+  // 6) Double-check against your totalPayable input
+  const callerExpectedTotalPaise = Math.round(totalPayable * 100);
+  if (callerExpectedTotalPaise !== totalInPaise) {
+    console.warn(
+      "[WARNING] totalPayable mismatch!",
+      "You passed totalPayable =", totalPayable,
+      `(${callerExpectedTotalPaise} paise), but from items/delivery/tax we got ${totalInPaise} paise.`
+    );
+    // It's up to you whether to override or to throw an error, etc.
+  }
+
+  // 7) Build the interactive 'order_details' payload
   const expirationTimestamp = Math.floor(Date.now() / 1000) + 300; // 5 minutes from now
-
-  // Build the interactive 'order_details' payload
   const interactivePayload = {
     type: "order_details",
     body: {
@@ -111,7 +147,7 @@ async function sendDynamicRazorpayInteractiveMessage({
           }
         ],
         currency: "INR",
-        // The final total the user has to pay
+        // The final total the user has to pay (must match line-items + tax)
         total_amount: {
           value: totalInPaise,
           offset: 100
@@ -124,11 +160,12 @@ async function sendDynamicRazorpayInteractiveMessage({
           },
           // Our line items (products + delivery)
           items: whatsappItems,
-          // The "subtotal" must be the sum of all line items (in paise).
+          // The "subtotal" in WhatsApp is the sum of line items (in paise)
           subtotal: {
             value: officialSubtotalInPaise,
             offset: 100
           },
+          // The tax object
           tax: {
             value: taxInPaise,
             offset: 100,
@@ -139,7 +176,7 @@ async function sendDynamicRazorpayInteractiveMessage({
     }
   };
 
-  // 3) Final request payload to WhatsApp
+  // 8) Final request payload to WhatsApp
   const messagePayload = {
     messaging_product: "whatsapp",
     to,
@@ -147,12 +184,14 @@ async function sendDynamicRazorpayInteractiveMessage({
     interactive: interactivePayload
   };
 
-  // 4) Use your phone number ID and token from environment
+  console.log("[DEBUG] Final messagePayload to send =>", JSON.stringify(messagePayload, null, 2));
+
+  // 9) Use your phone number ID and token from environment
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const accessToken   = process.env.WHATSAPP_TOKEN;
   const apiUrl        = `https://graph.facebook.com/v16.0/${phoneNumberId}/messages`;
 
-  // 5) Send it via axios
+  // 10) Send it via axios
   try {
     const response = await axios.post(apiUrl, messagePayload, {
       headers: {
@@ -160,7 +199,7 @@ async function sendDynamicRazorpayInteractiveMessage({
         Authorization: `Bearer ${accessToken}`
       }
     });
-    console.log("Razorpay order_details message sent:", response.data);
+    console.log("Razorpay order_details message sent successfully:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error sending dynamic Razorpay message:", error.response?.data || error.message);
