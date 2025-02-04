@@ -44,7 +44,7 @@ async function handleProductOffer(from, msgBody) {
 - Additional Discount: ₹${additionalDiscount}
 - Tax (5%): ₹${tax.toFixed(2)}
 - Packing Charge: ₹${packingCharge}
-- Total (Before PP Discount): ₹${finalPrice.toFixed(2)}
+- The Best Dominos could have given you Total (Before PP Discount): ₹${finalPrice.toFixed(2)}
 
 **Final Price** (after 10% discount): ₹${finalPicapoolPrice.toFixed(2)}
         `;
