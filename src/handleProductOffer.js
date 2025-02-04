@@ -87,7 +87,7 @@ async function handlePaymentConfirmation(from, selectedOption) {
 
         // Suppose your final price already includes tax & packingCharge, 
         // but let's say we also have a fixed delivery = 45
-        const delivery = 45;
+        const delivery = 20;
 
         const { orderItems, basePrice, tax, finalPrice } = sessionData;
         const referenceId = "ref_" + Date.now();
