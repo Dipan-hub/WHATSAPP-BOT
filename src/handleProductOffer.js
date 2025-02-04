@@ -31,7 +31,6 @@ async function handleProductOffer(from, msgBody) {
     if (sumSalePrice >= minOrderAmount) {
         const packingCharge = 20; 
         const tax = basePrice * 0.05;
-        const temporary = finalPrice+packingCharge;  
 
         // Example final price calculation
         let finalPrice = (basePrice - additionalDiscount)* 1.05 + packingCharge; // 10% discount
@@ -47,7 +46,7 @@ async function handleProductOffer(from, msgBody) {
 - Packing Charge: ₹${packingCharge}
 - The Best Dominos could have given you Total (Before PP Discount): ₹${finalPrice.toFixed(2)}
 
-**Final Price** (after 10% discount): ₹${temporary.toFixed(2)}
+**Final Price** (after 10% discount): ₹${finalPicapoolPrice.toFixed(2)}
         `;
 
         await sendWhatsAppMessage(from, breakdown);
