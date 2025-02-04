@@ -51,7 +51,7 @@ async function sendDynamicRazorpayInteractiveMessage({
 
   // 1) Convert the function inputs from ₹ to paise
   const taxInPaise      = Math.round(taxAmount * 100);
-  const deliveryInPaise = Math.round(delivery  * 0);
+  const deliveryInPaise = Math.round(delivery  * 100);
   // We'll compute the sum of product line items from the "items" array,
   // rather than trusting the passed-in `subtotal` to avoid mismatch.
 
