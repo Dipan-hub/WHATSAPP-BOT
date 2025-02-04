@@ -137,7 +137,7 @@ async function extractOrderDetails(message) {
   // As described: finalPicapoolPrice = sumSalePrice * 1.05 + DELIVERY_FEE
   // Where 1.05 means 5% tax on sumSalePrice
   const taxAmount = sumSalePrice * TAX_RATE;
-  const finalPicapoolPrice = sumSalePrice + taxAmount + DELIVERY_FEE;
+  const finalPicapoolPrice = (sumSalePrice + DELIVERY_FEE) * (1+TAX_RATE);
 
   console.log("[extractOrderDetails] totalAfterDiscounts  =", totalAfterDiscounts);
   console.log("[extractOrderDetails] sumSalePrice (total discounted) =", sumSalePrice);
