@@ -30,7 +30,8 @@ async function handleProductOffer(from, msgBody) {
 
     if (sumSalePrice >= minOrderAmount) {
         const packingCharge = 20; 
-        const tax = basePrice * 0.05;  
+        const tax = basePrice * 0.05;
+        const temporary = finalPrice+packingCharge;  
 
         // Example final price calculation
         let finalPrice = (basePrice - additionalDiscount)* 1.05 + packingCharge; // 10% discount
@@ -46,7 +47,7 @@ async function handleProductOffer(from, msgBody) {
 - Packing Charge: ₹${packingCharge}
 - The Best Dominos could have given you Total (Before PP Discount): ₹${finalPrice.toFixed(2)}
 
-**Final Price** (after 10% discount): ₹${finalPicapoolPrice.toFixed(2)}
+**Final Price** (after 10% discount): ₹${temporary.toFixed(2)}
         `;
 
         await sendWhatsAppMessage(from, breakdown);
@@ -87,13 +88,13 @@ async function handlePaymentConfirmation(from, selectedOption) {
 
         // Suppose your final price already includes tax & packingCharge, 
         // but let's say we also have a fixed delivery = 45
-        //const delivery = 20;
+        const delivery = 20;
 
-        const { orderItems, basePrice, tax, finalPicapoolPrice } = sessionData;
+        const { orderItems, basePrice, tax, finalPrice } = sessionData;
         const referenceId = "ref_" + Date.now();
 
         // If your finalPrice does NOT include delivery, then do:
-        const totalPayable = finalPicapoolPrice;
+        const totalPayable = finalPrice + delivery;
 
         // Otherwise, if finalPrice already includes it, set totalPayable = finalPrice
         // and pass delivery = 0.
