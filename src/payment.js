@@ -4,7 +4,7 @@ const axios = require('axios');
 
 // This function will generate a Razorpay payment link
 async function generatePaymentLink(amount, name = "Dipan", phone = "8917602924") {
-    const razorpayKeyId = process.env.RAZORPAY_KEY_ID;  // Store this in your .env file
+    /*const razorpayKeyId = process.env.RAZORPAY_KEY_ID;  // Store this in your .env file
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET; // Store this in your .env file
 
     const amountInPaise =Math.round( amount * 100);  // Convert to paise
@@ -42,7 +42,7 @@ async function generatePaymentLink(amount, name = "Dipan", phone = "8917602924")
     } catch (error) {
         console.error('Error generating payment link:', error);
         throw error;
-    }
+    }*/
 }
 
 module.exports = { generatePaymentLink };
