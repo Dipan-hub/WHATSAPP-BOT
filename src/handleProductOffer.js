@@ -107,7 +107,7 @@ async function handlePaymentConfirmation(from, selectedOption) {
           items: orderItems,       // array of items
           subtotal: basePrice,     // or sum of sale-price items
           taxAmount: tax,          // 5% tax
-          taxDescription: "5% GST",
+          taxDescription: "GST",
           delivery,                // pass the 45 or 0
           totalPayable             // final total
         });
