@@ -6,10 +6,11 @@ const Papa = require('papaparse');
 // Your published Google Sheets CSV URL
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQZSZaOjPBrejN1HsXWEGVnlWHei8G94s-NShyn7KcMXGF-gRXqQYIyU6i5eK1BF00u8SMnfZ2Vptyh/pub?output=csv';
 
-const TAX_RATE = 0.05;            // 5% tax
-const PACKING_FEE = 20;          // ₹20 packing fee
-const PICA_POOL_DISCOUNT = 0.10;  // 10% discount per pizza
-const EXTRA_DISCOUNT = 60;       // Example discount
+// Constants for discount and fees
+const ADDITIONAL_DISCOUNT = 60;    // Subtracted once from total MRP sum
+const PICAPOOL_DISCOUNT_RATE = 0.1; // 10% discount
+const TAX_RATE = 0.05;             // 5% tax
+const DELIVERY_FEE = 45;           // Flat delivery cost
 
 /**
  * 1) Fetch & parse CSV from Google Sheets, returning a mapping like { '57': 299, '58': 259, ... }.
@@ -61,68 +62,97 @@ async function extractOrderDetails(message) {
   console.log("=== [extractOrderDetails] Incoming message ===");
   console.log(message);
 
-  // (a) Fetch the price data from Google Sheets
+  // (a) Fetch the price data (MRP) from Google Sheets
   const priceData = await fetchPriceData();
 
   // (b) Prepare for capturing details
   let orderItems = [];
-  let totalDominosPrice = 0;
-  let baseprice = 0;
+  let basePrice = 0;
 
-  // (c) Regex to find (P_ID:  <number>)
+  // (c) Regex to find patterns like (P_ID:  <number>)
   const regex = /\(P_ID:\s*(\d+)\)/g;
   let match;
-  
+
   console.log("--- [extractOrderDetails] Searching for '(P_ID: XXX)' patterns...");
+
+  // Collect each product's MRP
+  let productMRPs = []; // just store the numerical MRP for each found P_ID
 
   while ((match = regex.exec(message)) !== null) {
     const pID = match[1];
     if (priceData[pID]) {
       const itemData = priceData[pID];
-      const numericPrice = itemData.price;  // Just the original price
-      const itemName = itemData.name;       // "Farmhouse (Regular)", etc.
-      const itemImage = itemData.image;     // The full image link
+      const numericMRP = itemData.price; // MRP from the sheet
+      const itemName = itemData.name;    // e.g. "Farmhouse (Regular)"
+      const itemImage = itemData.image;  // Full image link
 
-      console.log(` -> Found P_ID ${pID}: ${itemName}, Price = ${numericPrice}`);
+      console.log(` -> Found P_ID ${pID}: ${itemName}, MRP = ${numericMRP}`);
 
-      totalDominosPrice += numericPrice;
-
-      // Collect the item details for later use
+      // Keep track of the item so we can finalize salePrice later
       orderItems.push({
         pID,
         name: itemName,
-        price: numericPrice,  // store numeric price
+        mrp: numericMRP,
         image: itemImage
       });
+
+      basePrice += numericMRP;
+      productMRPs.push(numericMRP);
     } else {
       console.warn(`   Warning: No data for P_ID ${pID}`);
     }
   }
-  
-  // (e) baseprice is just the sum of MRPs before discount, etc.
-  baseprice = totalDominosPrice;
-  console.log("[extractOrderDetails] Base total (MRP sum) =", baseprice);
 
-  // (f) Apply discount -> tax -> packing fee
-  console.log(`[extractOrderDetails] Subtracting EXTRA_DISCOUNT of ₹${EXTRA_DISCOUNT}`);
-  let afterDiscount = totalDominosPrice - EXTRA_DISCOUNT;
-  
-  console.log(`[extractOrderDetails] Applying TAX_RATE of ${TAX_RATE * 100}%`);
-  let afterTax = afterDiscount * (1 + TAX_RATE);
+  console.log("[extractOrderDetails] Base total (MRP sum) =", basePrice);
 
-  console.log(`[extractOrderDetails] Adding PACKING_FEE of ₹${PACKING_FEE}`);
-  totalDominosPrice = afterTax + PACKING_FEE;
+  // (d) Now apply Additional discount of ₹60, then Picapool discount of 10%
+  // We'll compute the final net total (sumSalePrice) for *all items combined*
+  // and then split it back among items proportionally to their MRP fraction.
+  //
+  //  netAfterDiscounts = ( (basePrice - ADDITIONAL_DISCOUNT) * (1 - PICAPOOL_DISCOUNT_RATE) )
 
-  console.log("[extractOrderDetails] Final 'Dominos' total =", totalDominosPrice.toFixed(2));
-  console.log("[extractOrderDetails] Order items array:", orderItems);
+  const totalAfterDiscounts = (basePrice - ADDITIONAL_DISCOUNT) * (1 - PICAPOOL_DISCOUNT_RATE);
 
+  // (e) Distribute final discounted amount across items proportionally
+  //     salePrice_i = totalAfterDiscounts * (itemMRP / basePrice)
+  let sumSalePrice = 0.0;
+
+  orderItems = orderItems.map((item) => {
+    // fraction for this item
+    const fraction = item.mrp / basePrice;
+    const salePrice = totalAfterDiscounts * fraction;
+
+    sumSalePrice += salePrice;
+
+    return {
+      pID: item.pID,
+      name: item.name,
+      price: salePrice,      // The discounted price for WhatsApp
+      image: item.image,
+      mrp: item.mrp          // Keep MRP if you want to store it, optional
+    };
+  });
+
+  // (f) Calculate tax and final price
+  // As described: finalPicapoolPrice = sumSalePrice * 1.05 + DELIVERY_FEE
+  // Where 1.05 means 5% tax on sumSalePrice
+  const taxAmount = sumSalePrice * TAX_RATE;
+  const finalPicapoolPrice = sumSalePrice + taxAmount + DELIVERY_FEE;
+
+  console.log("[extractOrderDetails] sumSalePrice (total discounted) =", sumSalePrice);
+  console.log("[extractOrderDetails] taxAmount (5%)               =", taxAmount);
+  console.log("[extractOrderDetails] delivery                    =", DELIVERY_FEE);
+  console.log("[extractOrderDetails] finalPicapoolPrice         =", finalPicapoolPrice);
+
+  // Return everything needed
   return {
     orderItems,
-    totalDominosPrice: Number(totalDominosPrice.toFixed(2)),
-    baseprice: Number(baseprice.toFixed(2))
+    basePrice,
+    sumSalePrice,          // sum of sale price of all items
+    taxAmount,
+    finalPicapoolPrice
   };
 }
-
 /**
  * 3) Calculate final price *with* Picapool discount on each item, plus tax, packing fee, minus extra discount.
  */

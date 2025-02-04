@@ -73,6 +73,7 @@ async function handlePaymentConfirmation(from, selectedOption) {
     }
 
     try {
+
         // Optionally generate your external link:
         //const finalPriceNumber = sessionData.finalPrice;
         // const paymentLink = await generatePaymentLink(finalPriceNumber);
@@ -82,19 +83,33 @@ async function handlePaymentConfirmation(from, selectedOption) {
             `Please complete your payment using the link:\n${paymentLink}\n\nOr use the button below.`
         );
         */
-        // Now send the interactive Razorpay message with the real items
-        const referenceId = "ref_" + Date.now();  // or any unique ID
-        const { orderItems, baseprice, tax, finalPrice } = sessionData;
 
-        // Build the dynamic payload
+
+        // Suppose your final price already includes tax & packingCharge, 
+        // but let's say we also have a fixed delivery = 45
+        const delivery = 45;
+
+        const { orderItems, baseprice, tax, finalPrice } = sessionData;
+        const referenceId = "ref_" + Date.now();
+
+        // If your finalPrice does NOT include delivery, then do:
+        const totalPayable = finalPrice + delivery;
+
+        // Otherwise, if finalPrice already includes it, set totalPayable = finalPrice
+        // and pass delivery = 0.
+        // For example:
+        // const totalPayable = finalPrice;
+
+        // Now call WhatsApp function
         await sendDynamicRazorpayInteractiveMessage({
           to: from,
           referenceId,
-          items: orderItems,            // array of items
-          subtotal: baseprice,          // or sum of items
-          taxAmount: tax,               // your 5% tax
+          items: orderItems,       // array of items
+          subtotal: baseprice,     // or sum of sale-price items
+          taxAmount: tax,          // 5% tax
           taxDescription: "5% GST",
-          totalPayable: finalPrice      // final price to pay
+          delivery,                // pass the 45 or 0
+          totalPayable             // final total
         });
 
     } catch (error) {
