@@ -74,14 +74,14 @@ async function handlePaymentConfirmation(from, selectedOption) {
 
     try {
         // Optionally generate your external link:
-        const finalPriceNumber = sessionData.finalPrice;
-        const paymentLink = await generatePaymentLink(finalPriceNumber);
-
+        //const finalPriceNumber = sessionData.finalPrice;
+        // const paymentLink = await generatePaymentLink(finalPriceNumber);
+        /*
         await sendWhatsAppMessage(
             from,
             `Please complete your payment using the link:\n${paymentLink}\n\nOr use the button below.`
         );
-
+        */
         // Now send the interactive Razorpay message with the real items
         const referenceId = "ref_" + Date.now();  // or any unique ID
         const { orderItems, baseprice, tax, finalPrice } = sessionData;
