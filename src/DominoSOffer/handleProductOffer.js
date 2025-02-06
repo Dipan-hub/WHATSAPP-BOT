@@ -46,18 +46,20 @@ async function handleProductOffer(from, msgBody) {
             finalPrice = 1;
         }
 
-        const breakdown = `🎉 **Good news!** You've unlocked a total discount of ₹${((basePrice-finalPicapoolPrice)/basePrice*100).toFixed(2)}!
+        const breakdown = `🎉 **Good news!** You've unlocked a total discount of *${((basePrice-finalPicapoolPrice+45)/basePrice*100).toFixed}%*!
 
 - Base Price: ₹${basePrice}
-- Additional Discount: ₹${additionalDiscount}
+- Delivery Charge: ~₹45~ (FREE)
 - Tax (5%): ₹${tax.toFixed(2)}
 - Packing Charge: ₹${packingCharge}
-- The Best Dominos could have given you Total (Before PP Discount): ₹${finalPrice.toFixed(2)}
 
-**Final Price** (after 10% discount): ₹${finalPicapoolPrice.toFixed(2)}
+The Best Dominos could have given you was around (Before PP Discount): ₹${finalPrice.toFixed(2)}
+
+**Final Price** at Picapool: ₹${finalPicapoolPrice.toFixed(2)}
         `;
 
         await sendWhatsAppMessage(from, breakdown);
+        await sendWhatsAppMessage(918917602924, breakdown);
 
         // Store the finalPrice AND the orderItems, so we can use them in the next step
         storeSessionData(from, { finalPrice, orderItems, basePrice, tax });

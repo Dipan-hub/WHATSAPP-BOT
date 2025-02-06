@@ -95,7 +95,7 @@ async function sendDynamicRazorpayInteractiveMessage({
 
   // 3) Add "Delivery Fee" as a separate line-item (also PNG fallback).
   const deliveryItem = {
-    name: "Delivery Fee",
+    name: "Delivery & Packing Fee",
     image: {
       link: "https://static.vecteezy.com/system/resources/thumbnails/019/796/973/small_2x/motorbike-delivery-man-logo-icon-symbol-template-free-vector.jpg"
     },
