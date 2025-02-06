@@ -46,16 +46,16 @@ async function handleProductOffer(from, msgBody) {
             finalPrice = 1;
         }
 
-        const breakdown = `🎉 **Good news!** You've unlocked a total discount of *${((basePrice-finalPicapoolPrice+45)/basePrice*100).toFixed}%*!
+        const breakdown = `🎉 **Good news!** You've unlocked a total discount of *${((basePrice-finalPicapoolPrice+45)/basePrice*100).toFixed(2)}%*!
 
 - Base Price: ₹${basePrice}
 - Delivery Charge: ~₹45~ (FREE)
 - Tax (5%): ₹${tax.toFixed(2)}
 - Packing Charge: ₹${packingCharge}
 
-The Best Dominos could have given you was around (Before PP Discount): ₹${finalPrice.toFixed(2)}
+The Best Dominos could have given you was around (Before PP Discount): *₹${finalPrice.toFixed(2)}*
 
-**Final Price** at Picapool: ₹${finalPicapoolPrice.toFixed(2)}
+**Final Price** at Picapool: *₹${finalPicapoolPrice.toFixed(2)}*
         `;
 
         await sendWhatsAppMessage(from, breakdown);
