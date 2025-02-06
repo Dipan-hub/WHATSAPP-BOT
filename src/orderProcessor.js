@@ -7,10 +7,10 @@ const Papa = require('papaparse');
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQZSZaOjPBrejN1HsXWEGVnlWHei8G94s-NShyn7KcMXGF-gRXqQYIyU6i5eK1BF00u8SMnfZ2Vptyh/pub?output=csv';
 
 // Constants for discount and fees
-const ADDITIONAL_DISCOUNT = 30;    // Subtracted once from total MRP sum
+const ADDITIONAL_DISCOUNT = process.env.DOM_ADDITIONAL_DISCOUNT || 50;    // Subtracted once from total MRP sum
 const PICAPOOL_DISCOUNT_RATE = 0.1; // 10% discount
 const TAX_RATE = 0.05;             // 5% tax
-const DELIVERY_FEE = 20;           // Flat delivery cost
+const DELIVERY_FEE = process.env.DOM_DELIVERY_FEE || 20;           // Flat delivery cost
 
 /**
  * 1) Fetch & parse CSV from Google Sheets, returning a mapping like { '57': 299, '58': 259, ... }.
