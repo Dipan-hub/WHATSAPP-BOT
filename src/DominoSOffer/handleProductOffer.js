@@ -1,10 +1,10 @@
 // handleProductOffer.js
 
-const { sendWhatsAppMessage } = require('./whatsapp.js');
-const { sendListMessage } = require('./whatsappList.js');
-const { extractOrderDetails } = require('./orderProcessor.js');
-const { generatePaymentLink } = require('./payment.js');
-const { sendDynamicRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
+const { sendWhatsAppMessage } = require('../whatsapp.js');
+const { sendListMessage } = require('../whatsappList.js');
+const { extractOrderDetails } = require('../orderProcessor.js');
+const { generatePaymentLink } = require('../payment.js');
+const { sendDynamicRazorpayInteractiveMessage } = require('../WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
 
 let sessionStore = {};
 
