@@ -25,9 +25,9 @@ async function handleProductOffer(from, msgBody) {
     const { orderItems, sumSalePrice, basePrice ,finalPicapoolPrice } = await extractOrderDetails(msgBody);
     console.log("Extracted order details:", { orderItems, sumSalePrice, basePrice });
 
-    const minOrderAmount = process.env.DOM_MIN_ORDER_AMOUNT || 314; 
-    const additionalDiscount = process.env.DOM_ADDITIONAL_DISCOUNT || 50;
-    const packingCharge = process.env.DOM_PACKING_CHARGES || 20;
+    const minOrderAmount = parseFloat(process.env.DOM_MIN_ORDER_AMOUNT || 314); 
+    const additionalDiscount = parseFloat(process.env.DOM_ADDITIONAL_DISCOUNT || 50);
+    const packingCharge = parseFloat(process.env.DOM_PACKING_CHARGES || 20);
 
     if (sumSalePrice >= minOrderAmount) {
          
