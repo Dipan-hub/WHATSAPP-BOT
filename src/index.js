@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 
 // Import your existing handleX.js functions
-const { handleProductOffer, handlePaymentConfirmation } = require('./handleProductOffer');
+const { handleProductOffer, handlePaymentConfirmation } = require('./DominoSOffer/handleProductOffer');
 const { handleLiveOffer } = require('./handleLiveOffer');
 const { handlePicapoolOffer } = require('./handlePicapoolOffer');
 
