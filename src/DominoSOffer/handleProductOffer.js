@@ -36,6 +36,7 @@ async function handleProductOffer(from, msgBody) {
         // Example final price calculation
         let finalPrice = (basePrice - additionalDiscount)* 1.05 + packingCharge; // 10% discount
         console.log("---Final Price---", { finalPrice });
+        finalPrice = parseFloat(finalPrice);
 
         if (finalPrice < 1) {
             finalPrice = 1;
@@ -44,7 +45,7 @@ async function handleProductOffer(from, msgBody) {
         const breakdown = `🎉 **Good news!** You've unlocked an additional discount of ₹${additionalDiscount}!
 
 - Base Price: ₹${basePrice}
-- Additional Discountdddddddddddd: ₹${additionalDiscount}
+- Additional Discount: ₹${additionalDiscount}
 - Tax (5%): ₹${tax.toFixed(2)}
 - Packing Charge: ₹${packingCharge}
 - The Best Dominos could have given you Total (Before PP Discount): ₹${finalPrice.toFixed(2)}
