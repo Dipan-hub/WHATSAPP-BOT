@@ -60,7 +60,7 @@ async function fetchPriceData(startRow, endRow) {
     }
   });
 
-  console.log('--- [fetchPriceData] Built priceMap:', priceMap);
+  //console.log('--- [fetchPriceData] Built priceMap:', priceMap);
   return priceMap;
 }
 
@@ -104,7 +104,7 @@ async function extractOrderDetails(message) {
 
   // (C) Fetch the partial data
   const priceData = await fetchPriceData(startRow, endRow);
-  console.log("--- [extractOrderDetails] priceData fetched =>", priceData);
+  //console.log("--- [extractOrderDetails] priceData fetched =>", priceData);
 
     // (d) Prepare for capturing details
     let orderItems = [];
