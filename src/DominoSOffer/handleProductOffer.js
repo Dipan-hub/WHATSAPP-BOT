@@ -25,6 +25,13 @@ async function handleProductOffer(from, msgBody) {
     const { orderItems, sumSalePrice, basePrice ,finalPicapoolPrice } = await extractOrderDetails(msgBody);
     console.log("Extracted order details:", { orderItems, sumSalePrice, basePrice });
 
+    // Extract the first item's pID from the orderItems array
+    const firstItemPID = orderItems[0]?.pID; 
+
+    // Log the result to check
+    console.log("\n\n\n\n\First Order Item pID:", firstItemPID,"\n\n\n\n\n\n");
+
+
     const minOrderAmount = parseFloat(process.env.DOM_MIN_ORDER_AMOUNT || 314); 
     const additionalDiscount = parseFloat(process.env.DOM_ADDITIONAL_DISCOUNT || 50);
     const packingCharge = parseFloat(process.env.DOM_PACKING_CHARGES || 20);
