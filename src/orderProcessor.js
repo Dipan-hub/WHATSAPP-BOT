@@ -18,7 +18,6 @@ const DELIVERY_FEE = process.env.DOM_DELIVERY_FEE || 20;           // Flat deliv
 async function fetchPriceData(startRow, endRow) {
   console.log('--- [fetchPriceData] Fetching CSV...');
 
-  // Fetch CSV data
   const response = await fetch(SHEET_CSV_URL);
   const csvText = await response.text();
 
@@ -29,12 +28,21 @@ async function fetchPriceData(startRow, endRow) {
     skipEmptyLines: true
   });
 
-  const priceMap = {};
+  // Debug: print all rows with their indices
+  console.log('--- [fetchPriceData] parsed.data.length:', parsed.data.length);
+  parsed.data.forEach((row, idx) => {
+    console.log(`Index [${idx}]:`, row); // So we see exactly which ID is at which index
+  });
 
-  // Determine the row range
+  console.log(`--- [fetchPriceData] Slicing from ${startRow} to ${endRow}`);
   const rowsToFetch = parsed.data.slice(startRow, endRow);
+  console.log('--- [fetchPriceData] rowsToFetch:', rowsToFetch);
 
-  rowsToFetch.forEach((row) => {
+  const priceMap = {};
+  rowsToFetch.forEach((row, index) => {
+    // Just for extra clarity
+    console.log(`--- [fetchPriceData] Row index in slice [${index}] =>`, row);
+
     const productId = row['Product'];
     const originalPrice = row['Price (Original)'];
     const discountedPrice = row['Price (Discounted)'] || 0;
@@ -64,28 +72,31 @@ async function extractOrderDetails(message) {
   console.log("=== [extractOrderDetails] Incoming message ===");
   console.log(message);
 
-    // (a) Extract the first P_ID from the user's message using regex
-    const regex = /\(P_ID:\s*(\d+)\)/g;
-    const match = regex.exec(message);
-    const firstPID = match ? parseInt(match[1]) : null;
+  const regex = /\(P_ID:\s*(\d+)\)/g;
+  const match = regex.exec(message);
+  console.log("--- [extractOrderDetails] Regex match =>", match);
 
-    // (b) Check the range for first P_ID and determine the row range to fetch
-    let startRow = 0;
-    let endRow = 0;
+  const firstPID = match ? parseInt(match[1]) : null;
+  console.log("--- [extractOrderDetails] firstPID =>", firstPID);
 
-    if (firstPID >= 57 && firstPID < 66) {
-      startRow = 2;  // Rows 500-1000
-      endRow = 11;
-    } else if (firstPID >= 67 && firstPID < 79) {
-      startRow = 12; // Rows 1000-1500
-      endRow = 24;
-    } else {
-      console.log("No specific range for this P_ID");
-      return;  // Or handle default case if needed
-    }
+  let startRow = 0;
+  let endRow = 0;
 
-    // (c) Fetch price data from the determined range
-    const priceData = await fetchPriceData(startRow, endRow);
+  if (firstPID >= 57 && firstPID < 66) {
+    startRow = 2;  
+    endRow = 11;
+    console.log("Detected range for 57 <= P_ID < 66 => slice(2,11)");
+  } else if (firstPID >= 67 && firstPID < 79) {
+    startRow = 12; 
+    endRow = 24;
+    console.log("Detected range for 67 <= P_ID < 79 => slice(12,24)");
+  } else {
+    console.log("No specific range for this P_ID");
+    return;  
+  }
+
+  const priceData = await fetchPriceData(startRow, endRow);
+  console.log("--- [extractOrderDetails] priceData fetched =>", priceData);
 
     // (d) Prepare for capturing details
     let orderItems = [];
