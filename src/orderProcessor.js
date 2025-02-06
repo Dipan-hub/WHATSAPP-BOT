@@ -109,19 +109,42 @@ async function extractOrderDetails(message) {
     // (d) Prepare for capturing details
     let orderItems = [];
     let basePrice = 0;
+    // Collect each product's MRP
+    let productMRPs = []; // just store the numerical MRP for each found P_ID
 
-  console.log("--- [extractOrderDetails] Searching for '(P_ID: XXX)' patterns...");
-
-  // Collect each product's MRP
-  let productMRPs = []; // just store the numerical MRP for each found P_ID
-
-  while ((match = regex.exec(message)) !== null) {
     const pID = match[1];
     if (priceData[pID]) {
       const itemData = priceData[pID];
       const numericMRP = itemData.price; // MRP from the sheet
       const itemName = itemData.name;    // e.g. "Farmhouse (Regular)"
       const itemImage = itemData.image;  // Full image link
+
+      console.log(` -> Found P_ID ${pID}: ${itemName}, MRP = ${numericMRP}`);
+
+      // Keep track of the item so we can finalize salePrice later
+      orderItems.push({
+        pID,
+        name: itemName,
+        mrp: numericMRP,
+        image: itemImage
+      });
+
+      basePrice += numericMRP;
+      productMRPs.push(numericMRP);
+    }
+
+
+  console.log("--- [extractOrderDetails] Searching for '(P_ID: XXX)' patterns...");
+
+
+
+  while ((match = regex.exec(message)) !== null) {
+     pID = match[1];
+    if (priceData[pID]) {
+       itemData = priceData[pID];
+       numericMRP = itemData.price; // MRP from the sheet
+       itemName = itemData.name;    // e.g. "Farmhouse (Regular)"
+       itemImage = itemData.image;  // Full image link
 
       console.log(` -> Found P_ID ${pID}: ${itemName}, MRP = ${numericMRP}`);
 
