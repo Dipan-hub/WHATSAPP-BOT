@@ -46,7 +46,7 @@ async function handleProductOffer(from, msgBody) {
             finalPrice = 1;
         }
 
-        const breakdown = `🎉 **Good news!** You've unlocked an additional discount of ₹${additionalDiscount}!
+        const breakdown = `🎉 **Good news!** You've unlocked a total discount of ₹${((basePrice-finalPicapoolPrice)/basePrice*100).toFixed(2)}!
 
 - Base Price: ₹${basePrice}
 - Additional Discount: ₹${additionalDiscount}
