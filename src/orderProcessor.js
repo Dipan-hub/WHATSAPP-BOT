@@ -15,8 +15,10 @@ const DELIVERY_FEE = process.env.DOM_DELIVERY_FEE || 20;           // Flat deliv
 /**
  * 1) Fetch & parse CSV from Google Sheets, returning a mapping like { '57': 299, '58': 259, ... }.
  */
-async function fetchPriceData() {
+async function fetchPriceData(startRow, endRow) {
   console.log('--- [fetchPriceData] Fetching CSV...');
+
+  // Fetch CSV data
   const response = await fetch(SHEET_CSV_URL);
   const csvText = await response.text();
 
@@ -29,22 +31,22 @@ async function fetchPriceData() {
 
   const priceMap = {};
 
-  // The columns we expect in each row: 
-  //  "Product", "Price (Original)", "Price (Discounted)", "Name", "Image URL"
-  parsed.data.forEach((row) => {
+  // Determine the row range
+  const rowsToFetch = parsed.data.slice(startRow, endRow);
+
+  rowsToFetch.forEach((row) => {
     const productId = row['Product'];
     const originalPrice = row['Price (Original)'];
-    // If you need the discounted price, you can store it as well
-    const discountedPrice = row['Price (Discounted)'] || 0; 
+    const discountedPrice = row['Price (Discounted)'] || 0;
     const productName = row['Name'] || "";
     const imageUrl = row['Image URL'] || "";
 
     if (productId && originalPrice) {
       priceMap[productId] = {
-        price: originalPrice,    // numeric
+        price: originalPrice,
         discountPrice: discountedPrice,
-        name: productName,       // from "Name"
-        image: imageUrl         // from "Image URL"
+        name: productName,
+        image: imageUrl
       };
     }
   });
@@ -62,16 +64,32 @@ async function extractOrderDetails(message) {
   console.log("=== [extractOrderDetails] Incoming message ===");
   console.log(message);
 
-  // (a) Fetch the price data (MRP) from Google Sheets
-  const priceData = await fetchPriceData();
+    // (a) Extract the first P_ID from the user's message using regex
+    const regex = /\(P_ID:\s*(\d+)\)/g;
+    const match = regex.exec(message);
+    const firstPID = match ? parseInt(match[1]) : null;
 
-  // (b) Prepare for capturing details
-  let orderItems = [];
-  let basePrice = 0;
+    // (b) Check the range for first P_ID and determine the row range to fetch
+    let startRow = 0;
+    let endRow = 0;
 
-  // (c) Regex to find patterns like (P_ID:  <number>)
-  const regex = /\(P_ID:\s*(\d+)\)/g;
-  let match;
+    if (firstPID >= 57 && firstPID < 66) {
+      startRow = 2;  // Rows 500-1000
+      endRow = 11;
+    } else if (firstPID >= 67 && firstPID < 79) {
+      startRow = 12; // Rows 1000-1500
+      endRow = 24;
+    } else {
+      console.log("No specific range for this P_ID");
+      return;  // Or handle default case if needed
+    }
+
+    // (c) Fetch price data from the determined range
+    const priceData = await fetchPriceData(startRow, endRow);
+
+    // (d) Prepare for capturing details
+    let orderItems = [];
+    let basePrice = 0;
 
   console.log("--- [extractOrderDetails] Searching for '(P_ID: XXX)' patterns...");
 
