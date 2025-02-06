@@ -112,7 +112,7 @@ async function extractOrderDetails(message) {
     // Collect each product's MRP
     let productMRPs = []; // just store the numerical MRP for each found P_ID
 
-    const pID = match[1];
+    let pID = match[1];
     if (priceData[pID]) {
       const itemData = priceData[pID];
       const numericMRP = itemData.price; // MRP from the sheet
