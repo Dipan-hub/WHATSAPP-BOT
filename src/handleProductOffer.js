@@ -25,7 +25,7 @@ async function handleProductOffer(from, msgBody) {
     const { orderItems, sumSalePrice, basePrice ,finalPicapoolPrice } = await extractOrderDetails(msgBody);
     console.log("Extracted order details:", { orderItems, sumSalePrice, basePrice });
 
-    const minOrderAmount = process.env.MIN_ORDER_AMOUNT || 100; 
+    const minOrderAmount = process.env.DOM_MIN_ORDER_AMOUNT || 100; 
     const additionalDiscount = 30 ; //process.env.ADDITIONAL_DISCOUNT || 50;
 
     if (sumSalePrice >= minOrderAmount) {
