@@ -26,7 +26,7 @@ async function handleProductOffer(from, msgBody) {
     console.log("Extracted order details:", { orderItems, sumSalePrice, basePrice });
 
     const minOrderAmount = process.env.DOM_MIN_ORDER_AMOUNT || 100; 
-    const additionalDiscount = 30 ; //process.env.ADDITIONAL_DISCOUNT || 50;
+    const additionalDiscount = process.env.DOM_ADDITIONAL_DISCOUNT || 50;
 
     if (sumSalePrice >= minOrderAmount) {
         const packingCharge = 20; 
