@@ -1,4 +1,4 @@
-const { sendWhatsAppMessage } = require('./whatsapp.js');
+const { sendWhatsAppMessage } = require('../whatsapp.js');
 
 function handlePicapoolOffer(from, message) {
     // Logic to handle messages with Z_ID

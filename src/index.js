@@ -10,7 +10,7 @@ const { handleLiveOffer } = require('./CabOffer/handleLiveOffer.js');
 const { handlePicapoolOffer } = require('./GroupOffer/handlePicapoolOffer');
 
 // Import the Razorpay interactive message function
-const { sendRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
+//const { sendRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
 
 const app = express();
 app.use(bodyParser.json());
@@ -18,6 +18,7 @@ app.use(bodyParser.json());
 const ADMIN_NUMBER = '918917602924';  // your admin's WhatsApp
 const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID } = process.env;
 
+/*
 // Quick function to send a normal text message to a WhatsApp user
 function sendMessage(to, msgBody) {
   const url = `https://graph.facebook.com/v16.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
@@ -38,6 +39,7 @@ function sendMessage(to, msgBody) {
       console.error('Error sending message:', error.response?.data || error.message);
     });
 }
+    */
 
 // Forward the user’s message to the admin
 function forwardMessageToAdmin(from, msgBody) {
