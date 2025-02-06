@@ -35,6 +35,8 @@ async function handleProductOffer(from, msgBody) {
 
         // Example final price calculation
         let finalPrice = (basePrice - additionalDiscount)* 1.05 + packingCharge; // 10% discount
+        console.log("---Final Price---", { finalPrice });
+
         if (finalPrice < 1) {
             finalPrice = 1;
         }
