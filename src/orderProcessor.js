@@ -88,13 +88,13 @@ async function extractOrderDetails(message) {
   // (B) Decide the slice for the CSV
   let startRow = 0;
   let endRow = 0;
-  if (firstPID >= 57 && firstPID < 66) {
-    startRow = 0;   // or the correct index for that group
+  if (firstPID >= 57 && firstPID < 67) {
+    startRow = 2;   // or the correct index for that group
     endRow = 11;    // or the correct end for that group
     console.log(`Detected range for 57 <= P_ID < 66 => slice(${startRow}, ${endRow})`);
   } else if (firstPID >= 67 && firstPID < 79) {
     // You see from the logs that P_ID=68 is at index 11, so let's include row 11
-    startRow = 11;
+    startRow = 12;
     endRow = 24;
     console.log(`Detected range for 67 <= P_ID < 79 => slice(${startRow}, ${endRow})`);
   } else {
