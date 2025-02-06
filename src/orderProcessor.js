@@ -40,6 +40,8 @@ async function fetchPriceData(startRow, endRow) {
 
   const priceMap = {};
   rowsToFetch.forEach((row, index) => {
+
+    console.log(`--- [fetchPriceData] Row index in slice [${index}] =>`, row);
     // Grab the relevant columns
     const productId = row['Product'];
     const originalPrice = row['Price (Original)'];
