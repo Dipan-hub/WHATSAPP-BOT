@@ -7,7 +7,7 @@ const axios = require('axios');
 // Import your existing handleX.js functions
 const { handleProductOffer, handlePaymentConfirmation } = require('./DominoSOffer/handleProductOffer');
 const { handleLiveOffer } = require('./CabOffer/handleLiveOffer.js');
-const { handlePicapoolOffer } = require('./handlePicapoolOffer');
+const { handlePicapoolOffer } = require('./GroupOffer/handlePicapoolOffer');
 
 // Import the Razorpay interactive message function
 const { sendRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
