@@ -34,6 +34,10 @@ async function handleProductOffer(from, msgBody) {
         const tax = basePrice * 0.05;
 
         // Example final price calculation
+        console.log("---Base Price---", { basePrice });
+        console.log("---additionalDiscount---", { additionalDiscount });
+        console.log("---packingCharges---", { packingCharge });
+
         let finalPrice = (basePrice - additionalDiscount)* 1.05 + packingCharge; // 10% discount
         console.log("---Final Price---", { finalPrice });
         finalPrice = parseFloat(finalPrice);
