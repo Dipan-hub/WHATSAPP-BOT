@@ -28,27 +28,26 @@ async function fetchPriceData(startRow, endRow) {
     skipEmptyLines: true
   });
 
-  // Debug: print all rows with their indices
-  console.log('--- [fetchPriceData] parsed.data.length:', parsed.data.length);
-  parsed.data.forEach((row, idx) => {
-    console.log(`Index [${idx}]:`, row); // So we see exactly which ID is at which index
-  });
+  // Instead of logging the entire parsed array, just confirm its length:
+  console.log('--- [fetchPriceData] Total rows:', parsed.data.length);
 
-  console.log(`--- [fetchPriceData] Slicing from ${startRow} to ${endRow}`);
+  // We only want rows from startRow...endRow:
+  console.log(`--- [fetchPriceData] Slicing from index ${startRow} to ${endRow}`);
   const rowsToFetch = parsed.data.slice(startRow, endRow);
-  console.log('--- [fetchPriceData] rowsToFetch:', rowsToFetch);
+
+  // Optional: log the resulting slice if needed, or keep it minimal
+  // console.log('--- [fetchPriceData] rowsToFetch:', rowsToFetch);
 
   const priceMap = {};
   rowsToFetch.forEach((row, index) => {
-    // Just for extra clarity
-    console.log(`--- [fetchPriceData] Row index in slice [${index}] =>`, row);
-
+    // Grab the relevant columns
     const productId = row['Product'];
     const originalPrice = row['Price (Original)'];
     const discountedPrice = row['Price (Discounted)'] || 0;
     const productName = row['Name'] || "";
     const imageUrl = row['Image URL'] || "";
 
+    // Only store valid rows
     if (productId && originalPrice) {
       priceMap[productId] = {
         price: originalPrice,
@@ -62,6 +61,7 @@ async function fetchPriceData(startRow, endRow) {
   console.log('--- [fetchPriceData] Built priceMap:', priceMap);
   return priceMap;
 }
+
   
 
 /**
@@ -72,29 +72,35 @@ async function extractOrderDetails(message) {
   console.log("=== [extractOrderDetails] Incoming message ===");
   console.log(message);
 
+  // (A) Find the first P_ID
   const regex = /\(P_ID:\s*(\d+)\)/g;
-  const match = regex.exec(message);
+  let match = regex.exec(message);  // use `let` if reassigning
   console.log("--- [extractOrderDetails] Regex match =>", match);
 
-  const firstPID = match ? parseInt(match[1]) : null;
+  let firstPID = null;
+  if (match) {
+    firstPID = parseInt(match[1], 10);
+  }
   console.log("--- [extractOrderDetails] firstPID =>", firstPID);
 
+  // (B) Decide the slice for the CSV
   let startRow = 0;
   let endRow = 0;
-
   if (firstPID >= 57 && firstPID < 66) {
-    startRow = 2;  
-    endRow = 11;
-    console.log("Detected range for 57 <= P_ID < 66 => slice(2,11)");
+    startRow = 0;   // or the correct index for that group
+    endRow = 11;    // or the correct end for that group
+    console.log(`Detected range for 57 <= P_ID < 66 => slice(${startRow}, ${endRow})`);
   } else if (firstPID >= 67 && firstPID < 79) {
-    startRow = 12; 
+    // You see from the logs that P_ID=68 is at index 11, so let's include row 11
+    startRow = 11;
     endRow = 24;
-    console.log("Detected range for 67 <= P_ID < 79 => slice(12,24)");
+    console.log(`Detected range for 67 <= P_ID < 79 => slice(${startRow}, ${endRow})`);
   } else {
-    console.log("No specific range for this P_ID");
-    return;  
+    console.log("No specific range for this P_ID, skipping...");
+    return;
   }
 
+  // (C) Fetch the partial data
   const priceData = await fetchPriceData(startRow, endRow);
   console.log("--- [extractOrderDetails] priceData fetched =>", priceData);
 
