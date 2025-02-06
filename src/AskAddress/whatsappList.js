@@ -10,7 +10,7 @@ const WHATSAPP_API_URL = `https://graph.facebook.com/v15.0/${process.env.WHATSAP
 const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN;
 
 // Function to send WhatsApp List Message
-async function sendListMessage(userPhone) {
+async function sendListMessage_NewHostel(userPhone) {
     const payload = {
         messaging_product: "whatsapp",
         to: userPhone,
@@ -110,4 +110,4 @@ async function sendListMessage(userPhone) {
 //     }
 // });
 
-module.exports = {sendListMessage};
+module.exports = {sendListMessage_NewHostel};

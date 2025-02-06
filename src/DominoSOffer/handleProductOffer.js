@@ -1,7 +1,7 @@
 // handleProductOffer.js
 
 const { sendWhatsAppMessage } = require('../whatsapp.js');
-const { sendListMessage } = require('../whatsappList.js');
+const { sendListMessage_NewHostel } = require('../AskAddress/whatsappList.js');
 const { extractOrderDetails } = require('../orderProcessor.js');
 const { generatePaymentLink } = require('../payment.js');
 const { sendDynamicRazorpayInteractiveMessage } = require('../WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
@@ -52,10 +52,11 @@ async function handleProductOffer(from, msgBody) {
 - Delivery Charge: ~₹45~ (FREE)
 - Tax (5%): ₹${tax.toFixed(2)}
 - Packing Charge: ₹${packingCharge}
-The Best Dominos could have given you was around (Before PP Discount): *₹${finalPrice.toFixed(2)}*
+- *Total Savings* at Picapool: *₹${((basePrice-finalPicapoolPrice+45)).toFixed(2)}*!
 
-**Final Price** at Picapool: *₹${finalPicapoolPrice.toFixed(2)}*
-*Total Savings*: *${((basePrice-finalPicapoolPrice+45)).toFixed(2)}%*!
+The Best Dominos could have given you was around : *₹${finalPrice.toFixed(2)}*
+
+**Final Price** at Picapool for your order: *₹${finalPicapoolPrice.toFixed(2)}*
         `;
 
         await sendWhatsAppMessage(from, breakdown);
@@ -65,7 +66,7 @@ The Best Dominos could have given you was around (Before PP Discount): *₹${fin
         storeSessionData(from, { finalPrice, orderItems, basePrice, tax });
 
         // Prompt the user with a list, or proceed
-        await sendListMessage(from);
+        await sendListMessage_NewHostel(from);
     } else {
         await sendWhatsAppMessage(
             from,
