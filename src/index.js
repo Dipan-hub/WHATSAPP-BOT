@@ -81,10 +81,10 @@ app.post("/webhook", async (req, res) => {
             const confirmationMessage = `Payment for your order with ID: has been successfully processed.`;
 
             // Send confirmation message to the user
-            sendMessage(from, confirmationMessage);
+            //sendMessage(from, confirmationMessage);
         
             // Send confirmation message to the admin
-            sendMessage(ADMIN_NUMBER, `Payment for order with ID:  has been processed. User: ${from}`);
+            sendMessage(ADMIN_NUMBER, `Payment for order with ID:  has been processed. User:`);// ${from}`);
         
           }
         });
