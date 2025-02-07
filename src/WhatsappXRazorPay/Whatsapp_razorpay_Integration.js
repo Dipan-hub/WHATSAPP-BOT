@@ -128,7 +128,9 @@ async function sendDynamicRazorpayInteractiveMessage({
   }
 
   // 7) Build the interactive 'order_details' payload
-  const expirationTimestamp = Math.floor(Date.now() / 1000) + 600; // 10 minutes from now
+  //const expirationTimestamp = Math.floor(Date.now() / 1000) + 600; // 10 minutes from now
+  const expirationTimestamp = Math.floor(Date.now() / 1000) + (2 * 24 * 60 * 60); // 2 days from now
+
   const interactivePayload = {
     type: "order_details",
     body: {

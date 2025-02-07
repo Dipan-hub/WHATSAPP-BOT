@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 const ADMIN_NUMBER = '918917602924';  // your admin's WhatsApp
 const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID } = process.env;
 
-/*
+
 // Quick function to send a normal text message to a WhatsApp user
 function sendMessage(to, msgBody) {
   const url = `https://graph.facebook.com/v16.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
@@ -39,7 +39,7 @@ function sendMessage(to, msgBody) {
       console.error('Error sending message:', error.response?.data || error.message);
     });
 }
-    */
+    
 
 // Forward the user’s message to the admin
 function forwardMessageToAdmin(from, msgBody) {
@@ -78,6 +78,14 @@ app.post("/webhook", async (req, res) => {
           if (status.type === 'payment') {
             console.log("Payment Status Update:", JSON.stringify(status, null, 2));
             // You can handle capturing or logging transaction details here
+            const confirmationMessage = `Payment for your order with ID: has been successfully processed.`;
+
+            // Send confirmation message to the user
+            sendMessage(from, confirmationMessage);
+        
+            // Send confirmation message to the admin
+            sendMessage(ADMIN_NUMBER, `Payment for order with ID:  has been processed. User: ${from}`);
+        
           }
         });
       }
