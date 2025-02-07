@@ -150,7 +150,7 @@ async function sendDynamicRazorpayInteractiveMessage({
             payment_gateway: {
               type: "razorpay",
               configuration_name:
-                "Dipan_Test",//process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
+                process.env.RAZORPAY_CONFIG_NAME || "PP_Payment_Test",
               razorpay: {
                 receipt: "receipt_" + referenceId,
                 notes: { promo: "testpromo" }
