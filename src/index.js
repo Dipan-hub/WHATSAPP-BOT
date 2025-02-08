@@ -126,6 +126,7 @@ Your order has been received.`;
       // For non-admin senders, check if we've reached today's order limit
       
       if (true) {
+        forwardMessageToAdmin(from, msgBody);
         //const orderLimitMsg = "We have reached today's order limit of 20 orders, please come back soon!";
         const orderLimitMsg = `
   📈 We have reached today's order limit of *20 orders*.
