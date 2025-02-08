@@ -26,7 +26,7 @@ async function handleProductOffer(from, msgBody) {
     console.log("Extracted order details:", { orderItems, sumSalePrice, basePrice });
 
     // Extract the first item's pID from the orderItems array
-    const firstItemPID = orderItems[0]?.pID; 
+    const firstItemPID = parseFloat(orderItems[0]?.pID); 
 
     // Log the result to check
     console.log("\n\n\n\n\First Order Item pID:", firstItemPID,"\n\n\n\n\n\n");
@@ -35,6 +35,9 @@ async function handleProductOffer(from, msgBody) {
     const minOrderAmount = parseFloat(process.env.DOM_MIN_ORDER_AMOUNT || 314); 
     const additionalDiscount = parseFloat(process.env.DOM_ADDITIONAL_DISCOUNT || 50);
     const packingCharge = parseFloat(process.env.DOM_PACKING_CHARGES || 20);
+
+    if(firstItemPID<500)
+    {
 
     if (sumSalePrice >= minOrderAmount) {
          
@@ -80,6 +83,49 @@ The Best Dominos could have given you was around : *₹${finalPrice.toFixed(2)}*
             `Hi! The minimum order value is ₹${minOrderAmount}. Please add more items.`
         );
     }
+
+}
+
+if(firstItemPID>500)
+    {
+
+         
+        const tax = basePrice * 0.05;
+
+        // Example final price calculation
+        console.log("---Base Price---", { basePrice });
+
+        let finalPrice = basePrice /1.05; // 10% discount
+        console.log("---Final Price---", { finalPrice });
+        finalPrice = parseFloat(finalPrice);
+
+        if (finalPrice < 1) {
+            finalPrice = 1;
+        }
+
+        const breakdown = `🎉 
+
+        👇 Here's the summary of your order:
+        
+        💰 **Base Price:** ₹${basePrice}
+        
+        🔻 **Final Price** at Picapool for your order: *₹${finalPrice.toFixed(2)}*😃✨
+        `;
+        
+
+        await sendWhatsAppMessage(from, breakdown);
+        await sendWhatsAppMessage(918917602924, breakdown);
+
+        // Store the finalPrice AND the orderItems, so we can use them in the next step
+        storeSessionData(from, { finalPrice, orderItems, basePrice, tax ,firstItemPID});
+
+        // Prompt the user with a list, or proceed
+        await sendListMessage_NewHostel(from);
+
+}
+
+
+
 }
 
 // Payment confirmation after user selects an option from the list, etc.
@@ -105,17 +151,27 @@ async function handlePaymentConfirmation(from, selectedOption) {
 
         // Suppose your final price already includes tax & packingCharge, 
         // but let's say we also have a fixed delivery = 45
-        const delivery = process.env.DOM_PACKING_CHARGES || 20;
+        
 
         const { orderItems, basePrice, tax, finalPrice ,firstItemPID} = sessionData;
         const referenceId = "ref_" + Date.now();
         console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
         console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
         console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
-
+  
+        if (firstItemPID<500){
+        let delivery = process.env.DOM_PACKING_CHARGES || 20;
 
         // If your finalPrice does NOT include delivery, then do:
-        const totalPayable = finalPrice + delivery;
+        let totalPayable = finalPrice + delivery;
+    }
+        if (firstItemPID>500)
+        {
+            tax =0;
+            delivery=0;
+            totalPayable =basePrice;
+
+        }
 
         // Otherwise, if finalPrice already includes it, set totalPayable = finalPrice
         // and pass delivery = 0.
