@@ -190,9 +190,15 @@ async function extractOrderDetails(message) {
   // and then split it back among items proportionally to their MRP fraction.
   //
   //  netAfterDiscounts = ( (basePrice - ADDITIONAL_DISCOUNT) * (1 - PICAPOOL_DISCOUNT_RATE) )
+  let totalAfterDiscounts=0;
 
-  const totalAfterDiscounts = (basePrice - ADDITIONAL_DISCOUNT) * (1 - PICAPOOL_DISCOUNT_RATE);
-
+  if(pID<500){
+  totalAfterDiscounts = (basePrice - ADDITIONAL_DISCOUNT) * (1 - PICAPOOL_DISCOUNT_RATE);
+  }
+  if(pID>500)
+  {totalAfterDiscounts=basePrice;
+    
+  }
   // (e) Distribute final discounted amount across items proportionally
   //     salePrice_i = totalAfterDiscounts * (itemMRP / basePrice)
   let sumSalePrice = 0.0;
