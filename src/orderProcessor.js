@@ -165,6 +165,26 @@ async function extractOrderDetails(message) {
 
   console.log("[extractOrderDetails] Base total (MRP sum) =", basePrice);
 
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+  console.log(` -> Found P_ID ${pID}:`);
+
+
   // (d) Now apply Additional discount of ₹60, then Picapool discount of 10%
   // We'll compute the final net total (sumSalePrice) for *all items combined*
   // and then split it back among items proportionally to their MRP fraction.
