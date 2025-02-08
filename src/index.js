@@ -99,6 +99,15 @@ app.post("/webhook", async (req, res) => {
   
         if (from === ADMIN_NUMBER) {
           // Admin logic
+          // Parse admin response for direct replies
+          const responseParts = msgBody.split(" - ");
+          if (responseParts.length === 2) {
+              const targetUser = responseParts[0].trim();
+              const replyMessage = responseParts[1].trim();
+              sendMessage(targetUser, replyMessage);
+          } else {
+              console.error("Admin message format is incorrect. Use 'phone_number - message_body'.");
+          }
         } else {
           // Forward user message to admin
           forwardMessageToAdmin(from, msgBody);
