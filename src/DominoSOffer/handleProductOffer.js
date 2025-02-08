@@ -70,7 +70,7 @@ The Best Dominos could have given you was around : *₹${finalPrice.toFixed(2)}*
         await sendWhatsAppMessage(918917602924, breakdown);
 
         // Store the finalPrice AND the orderItems, so we can use them in the next step
-        storeSessionData(from, { finalPrice, orderItems, basePrice, tax });
+        storeSessionData(from, { finalPrice, orderItems, basePrice, tax ,firstItemPID});
 
         // Prompt the user with a list, or proceed
         await sendListMessage_NewHostel(from);
@@ -107,8 +107,12 @@ async function handlePaymentConfirmation(from, selectedOption) {
         // but let's say we also have a fixed delivery = 45
         const delivery = process.env.DOM_PACKING_CHARGES || 20;
 
-        const { orderItems, basePrice, tax, finalPrice } = sessionData;
+        const { orderItems, basePrice, tax, finalPrice ,firstItemPID} = sessionData;
         const referenceId = "ref_" + Date.now();
+        console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
+        console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
+        console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
+
 
         // If your finalPrice does NOT include delivery, then do:
         const totalPayable = finalPrice + delivery;
