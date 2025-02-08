@@ -124,12 +124,16 @@ Your order has been received.`;
       const msgBody = message.text?.body;
 
       // For non-admin senders, check if we've reached today's order limit
-      /*
+      
       if (true) {
-        const orderLimitMsg = "We have reached today's order limit of 20 orders, please come back soon!";
+        //const orderLimitMsg = "We have reached today's order limit of 20 orders, please come back soon!";
+        const orderLimitMsg = `
+  We have reached today's order limit of *20 orders*.
+  Please come back tomorrow and place your order then!
+`;
         await sendMessage(from, orderLimitMsg);
         return res.sendStatus(200);
-      }*/
+      }
   
       if (from === ADMIN_NUMBER) {
         // Admin logic: parse admin response for direct replies
