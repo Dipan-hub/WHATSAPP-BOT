@@ -155,23 +155,23 @@ async function handlePaymentConfirmation(from, selectedOption) {
 
         const { orderItems, basePrice, tax, finalPrice ,firstItemPID} = sessionData;
         const referenceId = "ref_" + Date.now();
+        let delivery = 0; // Initialize delivery variable
+        let totalPayable = 0; // Initialize totalPayable variable
         console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
         console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
         console.log(`\n\n\n\n \n The gaaand faad value of firstItemPID is : ${firstItemPID}\n\n\n\n`);
   
-        if (firstItemPID<500){
-        let delivery = process.env.DOM_PACKING_CHARGES || 20;
-
-        // If your finalPrice does NOT include delivery, then do:
-        let totalPayable = finalPrice + delivery;
-    }
-        if (firstItemPID>500)
-        {
-            tax =0;
-            delivery=0;
-            totalPayable =basePrice;
-
+        if (firstItemPID < 500) {
+            delivery = process.env.DOM_PACKING_CHARGES || 20;
+        
+            // If your finalPrice does NOT include delivery, then do:
+            totalPayable = finalPrice + delivery;
+        } else if (firstItemPID > 500) {
+            tax = 0;
+            delivery = 0;
+            totalPayable = basePrice;
         }
+        
 
         // Otherwise, if finalPrice already includes it, set totalPayable = finalPrice
         // and pass delivery = 0.
