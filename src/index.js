@@ -128,9 +128,12 @@ Your order has been received.`;
       if (true) {
         //const orderLimitMsg = "We have reached today's order limit of 20 orders, please come back soon!";
         const orderLimitMsg = `
-  We have reached today's order limit of *20 orders*.
-  Please come back tomorrow and place your order then!
-`;
+  📈 We have reached today's order limit of *20 orders*.
+  ⏳ Please come back tomorrow and place your order then.
+  Thank you for your understanding! 🙏
+      `;
+      
+      
         await sendMessage(from, orderLimitMsg);
         return res.sendStatus(200);
       }
