@@ -1,7 +1,7 @@
 // handleProductOffer.js
 
 const { sendWhatsAppMessage } = require('../whatsapp.js');
-const { sendListMessage_NewHostel } = require('../AskAddress/whatsappList.js');
+const { sendListMessage_NewHostel ,sendListMessage_OldHostel} = require('../AskAddress/whatsappList.js');
 const { extractOrderDetails } = require('../orderProcessor.js');
 const { generatePaymentLink } = require('../payment.js');
 const { sendDynamicRazorpayInteractiveMessage } = require('../WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
@@ -121,7 +121,7 @@ if(firstItemPID>500)
         storeSessionData(from, { finalPrice, orderItems, basePrice, tax ,firstItemPID});
 
         // Prompt the user with a list, or proceed
-        await sendListMessage_NewHostel(from);
+        await sendListMessage_OldHostel(from);
 
 }
 

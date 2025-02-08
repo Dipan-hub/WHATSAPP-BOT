@@ -52,7 +52,48 @@ async function sendListMessage_NewHostel(userPhone) {
         throw error.response?.data || error.message;
     }
 }
+async function sendListMessage_OldHostel(userPhone) {
+    const payload = {
+        messaging_product: "whatsapp",
+        to: userPhone,
+        type: "interactive",
+        interactive: {
+            type: "list",
+            header: {
+                type: "text",
+                text: "May I know where you'd like your orders to be delivered? 📍🏠"
+            },
+            body: { text: "Please select your hostel" },
+            action: {
+                button: "Choose Hostel",
+                sections: [
+                    {
+                        title: "My Hostel",
+                        rows: [
+                            { id: "option_1", title: "Aryabhatta" },
+                            { id: "option_2", title: "Bhaskara" },
+                            { id: "option_3", title: "Charaka" },
+                            { id: "option_4", title: "Shushruta" },
+                            { id: "option_5", title: "Kautilya" },
+                            { id: "option_6", title: "Vyasa" },
+                            { id: "option_7", title: "Varahamira" },
+                            { id: "option_8", title: "Ramanuja" }
+                        ]
+                    }
+                ]
+            }
+        }
+    };
 
+    try {
+        const response = await axios.post(WHATSAPP_API_URL, payload, {
+            headers: { Authorization: `Bearer ${ACCESS_TOKEN}`, "Content-Type": "application/json" }
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+}
 // Route to send list message
 // app.post("/send-list", async (req, res) => {
 //     const { userPhone } = req.body;
@@ -110,4 +151,4 @@ async function sendListMessage_NewHostel(userPhone) {
 //     }
 // });
 
-module.exports = {sendListMessage_NewHostel};
+module.exports = {sendListMessage_NewHostel,sendListMessage_OldHostel};
