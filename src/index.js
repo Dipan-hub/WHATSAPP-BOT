@@ -156,7 +156,7 @@ app.post("/webhook", async (req, res) => {
             
             // Create a beautiful confirmation message
             const confirmationMessage = `✅ your order has been successfully received🎉. 
-            Here are the details of your order:
+Here are the details of your order:
 
 - Order ID: ${orderId}
 - Amount: INR ${actualAmount}
