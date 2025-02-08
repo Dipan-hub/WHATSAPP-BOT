@@ -155,7 +155,12 @@ app.post("/webhook", async (req, res) => {
             const actualAmount = amountValue / offset;
             
             // Create a beautiful confirmation message
-            const confirmationMessage = `✅ Your order ${orderId} of ₹${actualAmount} (Ref: ${referenceId}) is confirmed! 🎉
+            const confirmationMessage = `✅ your order has been successfully received🎉. 
+            Here are the details of your order:
+
+- Order ID: ${orderId}
+- Amount: INR ${actualAmount}
+- Reference ID: ${referenceId} 
 
 🚚 Your order will be delivered soon.
 
