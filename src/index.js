@@ -169,9 +169,21 @@ Thank you for choosing Picapool! 🙏💚`;
             
             // Send confirmation message to the recipient
             sendMessage(recipient, confirmationMessage);
+
+            const sed = `✅ your order has been successfully received🎉. 
+Here are the details of your order:
+
+- Order ID: ${orderId}
+- Amount: INR ${actualAmount}
+- Reference ID: ${referenceId} 
+- Receipeint number : ${recipient} 
+
+🚚 Your order will be delivered soon.
+
+Thank you for choosing Picapool! 🙏💚`;
             
             // Send a confirmation message to the admin
-            sendMessage(ADMIN_NUMBER, `Payment confirmed for order ${orderId} (Ref: ${referenceId}). Amount: INR ${actualAmount}.`);
+            sendMessage(ADMIN_NUMBER, sed);
           }
         });
       }
