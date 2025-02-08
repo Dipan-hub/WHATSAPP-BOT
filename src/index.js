@@ -142,19 +142,31 @@ app.post("/webhook", async (req, res) => {
       
       // Check for "payment" statuses first (optional)
       if (webhookEvent.statuses) {
-        // handle payment updates from WhatsApp
         webhookEvent.statuses.forEach((status) => {
           if (status.type === 'payment') {
             console.log("Payment Status Update:", JSON.stringify(status, null, 2));
-            // You can handle capturing or logging transaction details here
-            const confirmationMessage = `Payment for your order with ID: has been successfully processed.`;
+            
+            // Extract details from the payment status JSON
+            const recipient = status.recipient_id; // Recipient's phone number
+            const referenceId = status.payment.reference_id;
+            const orderId = status.payment.transaction.id;
+            const amountValue = status.payment.amount.value;
+            const offset = status.payment.amount.offset || 1;
+            const actualAmount = amountValue / offset;
+            
+            // Create a beautiful confirmation message
+            const confirmationMessage = `✅ Your order ${orderId} of ₹${actualAmount} (Ref: ${referenceId}) is confirmed! 🎉
 
-            // Send confirmation message to the user
-            sendMessage(from, confirmationMessage);
-        
-            // Send confirmation message to the admin
-            sendMessage(ADMIN_NUMBER, `Payment for order with ID:  has been processed. User:`);// ${from}`);
-        
+🚚 Your order will be delivered soon.
+
+Thank you for choosing Picapool! 🙏💚`;
+
+            
+            // Send confirmation message to the recipient
+            sendMessage(recipient, confirmationMessage);
+            
+            // Send a confirmation message to the admin
+            sendMessage(ADMIN_NUMBER, `Payment confirmed for order ${orderId} (Ref: ${referenceId}). Amount: INR ${actualAmount}.`);
           }
         });
       }
