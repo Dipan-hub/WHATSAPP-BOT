@@ -71,6 +71,7 @@ app.post("/webhook", async (req, res) => {
       const webhookEvent = body.entry?.[0]?.changes?.[0]?.value;
       if (!webhookEvent) return res.sendStatus(404);
   
+      /*
       // Check for "payment" statuses first (optional)
       if (webhookEvent.statuses) {
         // handle payment updates from WhatsApp
@@ -89,6 +90,7 @@ app.post("/webhook", async (req, res) => {
           }
         });
       }
+      */
   
       // Check if there's a message
       const messages = webhookEvent.messages;
@@ -136,6 +138,27 @@ app.post("/webhook", async (req, res) => {
           }
         }
       }
+
+      
+      // Check for "payment" statuses first (optional)
+      if (webhookEvent.statuses) {
+        // handle payment updates from WhatsApp
+        webhookEvent.statuses.forEach((status) => {
+          if (status.type === 'payment') {
+            console.log("Payment Status Update:", JSON.stringify(status, null, 2));
+            // You can handle capturing or logging transaction details here
+            const confirmationMessage = `Payment for your order with ID: has been successfully processed.`;
+
+            // Send confirmation message to the user
+            //sendMessage(from, confirmationMessage);
+        
+            // Send confirmation message to the admin
+            sendMessage(ADMIN_NUMBER, `Payment for order with ID:  has been processed. User:`);// ${from}`);
+        
+          }
+        });
+      }
+      
   
       res.sendStatus(200);
     } catch (err) {
