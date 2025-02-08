@@ -54,7 +54,7 @@ async function sendDynamicRazorpayInteractiveMessage({
   // 1) Convert ₹ to paise
   const taxInPaise      = Math.round(taxAmount * 100);
   const deliveryInPaise = Math.round(delivery  * 100);
-  const totalPayable = Math.round(totalPayable  * 100);
+  //const totalPayable = Math.round(totalPayable  * 100);
 
   // 2) Build array of product line-items for WhatsApp
   let sumOfProductsInPaise = 0;
