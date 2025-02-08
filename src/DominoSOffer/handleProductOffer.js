@@ -105,11 +105,11 @@ if(firstItemPID>500)
 
         const breakdown = `🎉 
 
-        👇 Here's the summary of your order:
+👇 Here's the summary of your order:
         
-        💰 **Base Price:** ₹${basePrice}
+💰 **Base Price:** ₹${basePrice}
         
-        🔻 **Final Price** at Picapool for your order: *₹${finalPrice.toFixed(2)}*😃✨
+🔻 **Final Price** at Picapool for your order: *₹${finalPrice.toFixed(2)}*😃✨
         `;
         
 
@@ -170,7 +170,7 @@ async function handlePaymentConfirmation(from, selectedOption) {
         } else if (firstItemPID > 500) {
 
             delivery = 0;
-            totalPayable = basePrice;
+            totalPayable = finalPrice;
         }
         let taxAmount = (firstItemPID > 500) ? 0 : tax; // If firstItemPID > 500, set tax to 0, otherwise use the existing tax value
 
