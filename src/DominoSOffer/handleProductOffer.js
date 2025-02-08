@@ -108,8 +108,9 @@ if(firstItemPID>500)
 👇 Here's the summary of your order:
         
 💰 **Base Price:** ₹${basePrice}
+   **Delivery Price** ~₹40~     
         
-🔻 **Final Price** at Picapool for your order: *₹${finalPrice.toFixed(2)}*😃✨
+🔻 **Final Price** at Picapool for your order: *₹${basePrice}*😃✨
         `;
         
 
