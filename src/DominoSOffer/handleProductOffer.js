@@ -240,18 +240,26 @@ if (referenceId) {
 
 // Formatting the message for WhatsApp or another platform
 const message = `
-Woahh!! We have received ₹${amount} successfully!! 🎉
+🎉 Woahh!! Your payment of ₹${amount/100} has been successfully received! 🎉
 
-Order ID: ${referenceId}
+Thank you for choosing Picpaool. We're excited to process your order! 🚀
 
+Order Details:
+--------------------
+Order ID: ${referenceIdLastThree}
 
 Items Ordered:
- - ${itemNames}
+${itemNames}
 
-
-Address: ${selectedOption || "Not Provided"}
+Delivery Address: ${selectedOption || "Not Provided"}
 Phone Number: ${recipient || "Not Provided"}
+
+We're starting the processing of your order now, and it will be with you soon!
+
+Thank you once again for trusting us. If you have any questions, feel free to reach out. 😊
 `;
+
+console.log(message);
 
 console.log("Order details:", message);
 await sendWhatsAppMessage(recipient, message);
