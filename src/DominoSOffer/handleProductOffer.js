@@ -228,16 +228,17 @@ const promoCode = notes?.promo || "No promo code applied";  // Handle the possib
 // Extracting order item details
 const itemNames = orderItems.map(item => item.name).join("\n - ");
 const referenceId = status.payment?.reference_id;  // Safely access the reference_id
+let referenceIdLastThree = "N/A";
 
 if (referenceId) {
   // Get the last 3 digits of the reference_id
-  const referenceIdLastThree = referenceId.slice(-3); // Using slice to get the last 3 characters
+  referenceIdLastThree = referenceId.slice(-3); // Using slice to get the last 3 characters
   console.log("Last three digits of reference_id:", referenceIdLastThree);
 } else {
   console.log("Reference ID not found in the payment data.");
 }
 
-/*
+
 // Formatting the message for WhatsApp or another platform
 const message = `
 🎉 Woahh!! Your payment of ₹${amount/100} has been successfully received! 🎉
@@ -258,8 +259,8 @@ We're starting the processing of your order now, and it will be with you soon!
 
 Thank you once again for trusting us. If you have any questions, feel free to reach out. 😊
 `;
-*/
 
+/*
 const message = `
 Woahh!! We have received ₹${amount/100} successfully!! 🎉
 
@@ -273,6 +274,7 @@ Items Ordered:
 Address: ${selectedOption || "Not Provided"}
 Phone Number: ${recipient || "Not Provided"}
 `;
+*/
 console.log(message);
 
 console.log("Order details:", message);
