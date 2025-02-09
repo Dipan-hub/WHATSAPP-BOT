@@ -221,8 +221,8 @@ const { id, payment, receipt, notes } = status;
 const amount = payment.amount.value;
 const paymentStatus = payment.status;
 const transactionID = payment.transaction.id;
-const currency = payment.currency;
-const method = payment.method.type;
+const recipient = status.recipient_id; 
+
 const promoCode = notes?.promo || "No promo code applied";  // Handle the possibility of missing promo
 
 // Extracting order item details
@@ -235,20 +235,19 @@ Woahh!! We have received ₹${amount} successfully!! 🎉
 
 Order ID: ${receiptLastThree}
 
-Payment Status: ${paymentStatus}
-Transaction ID: ${transactionID}
-Payment Method: ${method} (${currency})
 
 Items Ordered:
  - ${itemNames}
 
-Promo Code: ${promoCode}
 
 Address: ${selectedOption || "Not Provided"}
-Phone Number: ${sessionData.phoneNumber || "Not Provided"}
+Phone Number: ${recipient || "Not Provided"}
 `;
 
 console.log("Order details:", message);
+await sendWhatsAppMessage(recipient, message);
+await sendWhatsAppMessage(918917602924, message);
+await sendWhatsAppMessage(919798306804, message);
 
 // Optionally, you can send the message to WhatsApp or any other platform here
 
