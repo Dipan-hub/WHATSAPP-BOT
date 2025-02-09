@@ -205,6 +205,16 @@ async function PaymentConfirmationMessage(from, status){
         await sendWhatsAppMessage(from, "No payment found. Please try again.");
         return;
     }
+    console.log("Payment Status Update:", JSON.stringify(status, null, 2));
+    const { finalPrice, orderItems, basePrice, tax ,firstItemPID, selectedOption} = sessionData;
+    console.log("Aaja llaga ja gal tha tha krdi krdi kirdi");
+    console.log("Aaja llaga ja gal tha tha krdi krdi kirdi");
+    console.log("Aaja llaga ja gal tha tha krdi krdi kirdi");
+    console.log("Aaja llaga ja gal tha tha krdi krdi kirdi");
+    console.log("Aaja llaga ja gal tha tha krdi krdi kirdi");
+    console.log("Extracted order details:", { finalPrice, orderItems, basePrice, tax ,firstItemPID, selectedOption });
+
+
 
 }
 

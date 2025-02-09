@@ -75,7 +75,8 @@ app.post("/webhook", async (req, res) => {
 
     // Check for payment statuses (if any)
     if (webhookEvent.statuses) {
-      webhookEvent.statuses.forEach((status) => {
+      webhookEvent.statuses.forEach(async (status) => {
+      //webhookEvent.statuses.forEach((status) => {
         if (status.type === 'payment') {
           console.log("Payment Status Update:", JSON.stringify(status, null, 2));
           
