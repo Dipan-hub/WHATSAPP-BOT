@@ -157,7 +157,7 @@ Your order has been received.`;
           // If user selected an option from a list (e.g., payment confirmation)
           const { title, id } = message.interactive.list_reply;
           forwardMessageToAdmin(from, title);
-          await handlePaymentConfirmation(from, id);
+          await handlePaymentConfirmation(from, title);
           dailyOrderCount++;
         } else if (msgBody && msgBody.includes("P_ID")) {
           // User typed something with product IDs (assumed to be an order)

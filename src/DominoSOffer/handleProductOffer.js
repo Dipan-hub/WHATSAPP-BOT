@@ -179,6 +179,7 @@ async function handlePaymentConfirmation(from, selectedOption) {
         // and pass delivery = 0.
         // For example:
         // const totalPayable = finalPrice;
+        storeSessionData(from, { finalPrice, orderItems, basePrice, tax ,firstItemPID, selectedOption});
 
         // Now call WhatsApp function
         await sendDynamicRazorpayInteractiveMessage({
