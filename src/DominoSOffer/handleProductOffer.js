@@ -214,6 +214,45 @@ async function PaymentConfirmationMessage(from, status){
     console.log("Aaja llaga ja gal tha tha krdi krdi kirdi");
     console.log("Extracted order details:", { finalPrice, orderItems, basePrice, tax ,firstItemPID, selectedOption });
 
+    console.log("Payment Status Update:", JSON.stringify(status, null, 2));
+
+// Extracting the relevant payment details
+const { id, payment, receipt, notes } = status;
+const amount = payment.amount.value;
+const paymentStatus = payment.status;
+const transactionID = payment.transaction.id;
+const currency = payment.currency;
+const method = payment.method.type;
+const promoCode = notes?.promo || "No promo code applied";  // Handle the possibility of missing promo
+
+// Extracting order item details
+const itemNames = orderItems.map(item => item.name).join("\n - ");
+const receiptLastThree = receipt.split('_').pop();  // Get last 3 digits of receipt
+
+// Formatting the message for WhatsApp or another platform
+const message = `
+Woahh!! We have received ₹${amount} successfully!! 🎉
+
+Order ID: ${receiptLastThree}
+
+Payment Status: ${paymentStatus}
+Transaction ID: ${transactionID}
+Payment Method: ${method} (${currency})
+
+Items Ordered:
+ - ${itemNames}
+
+Promo Code: ${promoCode}
+
+Address: ${selectedOption || "Not Provided"}
+Phone Number: ${sessionData.phoneNumber || "Not Provided"}
+`;
+
+console.log("Order details:", message);
+
+// Optionally, you can send the message to WhatsApp or any other platform here
+
+
 
 
 }
