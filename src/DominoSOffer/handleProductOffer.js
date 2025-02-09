@@ -227,13 +227,22 @@ const promoCode = notes?.promo || "No promo code applied";  // Handle the possib
 
 // Extracting order item details
 const itemNames = orderItems.map(item => item.name).join("\n - ");
-const receiptLastThree = receipt.split('_').pop();  // Get last 3 digits of receipt
+const referenceId = status.payment?.reference_id;  // Safely access the reference_id
+
+if (referenceId) {
+  // Get the last 3 digits of the reference_id
+  const referenceIdLastThree = referenceId.slice(-3); // Using slice to get the last 3 characters
+  console.log("Last three digits of reference_id:", referenceIdLastThree);
+} else {
+  console.log("Reference ID not found in the payment data.");
+}
+
 
 // Formatting the message for WhatsApp or another platform
 const message = `
 Woahh!! We have received ₹${amount} successfully!! 🎉
 
-Order ID: ${receiptLastThree}
+Order ID: ${referenceId}
 
 
 Items Ordered:
