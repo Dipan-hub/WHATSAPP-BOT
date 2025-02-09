@@ -237,7 +237,7 @@ if (referenceId) {
   console.log("Reference ID not found in the payment data.");
 }
 
-
+/*
 // Formatting the message for WhatsApp or another platform
 const message = `
 🎉 Woahh!! Your payment of ₹${amount/100} has been successfully received! 🎉
@@ -258,7 +258,21 @@ We're starting the processing of your order now, and it will be with you soon!
 
 Thank you once again for trusting us. If you have any questions, feel free to reach out. 😊
 `;
+*/
 
+const message = `
+Woahh!! We have received ₹${amount/100} successfully!! 🎉
+
+Order ID: ${referenceIdLastThree}
+
+
+Items Ordered:
+ - ${itemNames}
+
+
+Address: ${selectedOption || "Not Provided"}
+Phone Number: ${recipient || "Not Provided"}
+`;
 console.log(message);
 
 console.log("Order details:", message);
