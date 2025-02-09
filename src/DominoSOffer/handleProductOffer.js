@@ -226,7 +226,7 @@ const recipient = status.recipient_id;
 const promoCode = notes?.promo || "No promo code applied";  // Handle the possibility of missing promo
 
 // Extracting order item details
-const itemNames = orderItems.map(item => item.name).join("\n - ");
+const itemNames = orderItems.map(item => item.name).join(" \n");
 const referenceId = status.payment?.reference_id;  // Safely access the reference_id
 let referenceIdLastThree = "N/A";
 
@@ -241,16 +241,16 @@ if (referenceId) {
 
 // Formatting the message for WhatsApp or another platform
 const message = `
-🎉 Woahh!! Your payment of ₹${amount/100} has been successfully received! 🎉
+🎉 Woahh!! Your payment of *₹${amount/100}* has been successfully received! 🎉
 
-Thank you for choosing Picpaool. We're excited to process your order! 🚀
+Thank you for choosing *Picpaool*. We're excited to process your order! 🚀
 
-Order Details:
 --------------------
 Order ID: ${referenceIdLastThree}
 
 Items Ordered:
 ${itemNames}
+--------------------
 
 Delivery Address: ${selectedOption || "Not Provided"}
 Phone Number: ${recipient || "Not Provided"}
@@ -281,11 +281,9 @@ console.log("Order details:", message);
 await sendWhatsAppMessage(recipient, message);
 await sendWhatsAppMessage(918917602924, message);
 await sendWhatsAppMessage(919798306804, message);
+await sendWhatsAppMessage(918143405112, message);
 
 // Optionally, you can send the message to WhatsApp or any other platform here
-
-
-
 
 }
 
