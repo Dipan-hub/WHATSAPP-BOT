@@ -130,6 +130,7 @@ if(firstItemPID>500)
 }
 
 // Payment confirmation after user selects an option from the list, etc.
+
 async function handlePaymentConfirmation(from, selectedOption) {
     const sessionData = getSessionData(from);
     if (!sessionData || !sessionData.finalPrice) {
@@ -198,5 +199,13 @@ async function handlePaymentConfirmation(from, selectedOption) {
         await sendWhatsAppMessage(from, "Failed to initiate payment.");
     }
 }
+async function PaymentConfirmationMessage(from, status){
+    const sessionData = getSessionData(from);
+    if (!sessionData || !sessionData.finalPrice) {
+        await sendWhatsAppMessage(from, "No payment found. Please try again.");
+        return;
+    }
 
-module.exports = { handleProductOffer, handlePaymentConfirmation };
+}
+
+module.exports = { handleProductOffer, handlePaymentConfirmation , PaymentConfirmationMessage};

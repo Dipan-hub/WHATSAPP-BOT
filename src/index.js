@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 
 // Import your existing handleX.js functions
-const { handleProductOffer, handlePaymentConfirmation } = require('./DominoSOffer/handleProductOffer');
+const { handleProductOffer, handlePaymentConfirmation , PaymentConfirmationMessage} = require('./DominoSOffer/handleProductOffer');
 const { handleLiveOffer } = require('./CabOffer/handleLiveOffer.js');
 const { handlePicapoolOffer } = require('./GroupOffer/handlePicapoolOffer');
 
@@ -86,6 +86,11 @@ app.post("/webhook", async (req, res) => {
           const amountValue = status.payment.amount.value;
           const offset = status.payment.amount.offset || 1;
           const actualAmount = amountValue / offset;
+
+
+          await PaymentConfirmationMessage(recipient,status);
+
+          /*
           
           // Create a confirmation message for the user
           const confirmationMessage = `✅ Your order has been successfully received 🎉. 
@@ -111,7 +116,8 @@ Thank you for choosing Picapool! 🙏💚`;
 Your order has been received.`;
           
           // Send a confirmation message to the admin
-          sendMessage(ADMIN_NUMBER, adminMessage);
+          sendMessage(ADMIN_NUMBER, adminMessage);*/
+
         }
       });
     }
