@@ -89,7 +89,8 @@ The Best Dominos could have given you was around : *₹${finalPrice.toFixed(2)}*
 if(firstItemPID>500)
     {
 
-         
+        if (sumSalePrice >= 201) {
+
         const tax = basePrice * 0.05;
 
         // Example final price calculation
@@ -123,8 +124,13 @@ if(firstItemPID>500)
         // Prompt the user with a list, or proceed
         await sendListMessage_OldHostel(from);
 
+}else {
+    await sendWhatsAppMessage(
+        from,
+        `Hi! The minimum order value is *₹201*. Please add more items.`
+    );
 }
-
+    }
 
 
 }
