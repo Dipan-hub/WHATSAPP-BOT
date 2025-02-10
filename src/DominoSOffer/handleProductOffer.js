@@ -280,7 +280,7 @@ console.log(message);
 console.log("Order details:", message);
 await sendWhatsAppMessage(recipient, message);
 await sendWhatsAppMessage(918917602924, message);
-await sendWhatsAppMessage(919798306804, message);
+await sendWhatsAppMessage(917224052216, message);
 await sendWhatsAppMessage(918143405112, message);
 
 // Optionally, you can send the message to WhatsApp or any other platform here
