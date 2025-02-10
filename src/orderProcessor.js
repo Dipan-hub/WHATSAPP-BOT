@@ -90,9 +90,9 @@ async function extractOrderDetails(message) {
   let endRow = 0;
   if (firstPID >= 101 && firstPID < 184) {
     startRow = 2 - 2;   // or the correct index for that group
-    endRow = 84 - 1;    // or the correct end for that group
+    endRow = 92 - 1;    // or the correct end for that group
     console.log(` DOMINOSS \n\n\n\n\n\n\ DOMINOS \n\n\n\n\n\n\ DOMINOS \n\n\n\n\n Detected range for 101 <= P_ID < 184 => slice(${startRow}, ${endRow})`);
-  } else if (firstPID >= 601 && firstPID < 668) {
+  } else if (firstPID >= 601 && firstPID < 670) {
     // You see from the logs that P_ID=68 is at index 11, so let's include row 11
     startRow = 602 - 2;
     endRow = 670 -1 ;
