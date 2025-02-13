@@ -88,10 +88,10 @@ The Best Dominos could have given you was around : *₹${finalPrice.toFixed(2)}*
 
 if(firstItemPID>500)
     {
-        if (orderItems.length>10)
+        if (orderItems.length>9)
         {await sendWhatsAppMessage(
             from,
-            `Hi! The minimum order items is 10. Please break down your order into ${orderItems.length/10} parts.`
+            `Hi! The minimum order is 9 items. Please split your order into ${Math.ceil(orderItems.length / 9)} part(s).`
         );}
 
         else if (sumSalePrice >= 201) {
