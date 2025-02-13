@@ -92,10 +92,10 @@ async function extractOrderDetails(message) {
     startRow = 2 - 2;   // or the correct index for that group
     endRow = 92 - 1;    // or the correct end for that group
     console.log(` DOMINOSS \n\n\n\n\n\n\ DOMINOS \n\n\n\n\n\n\ DOMINOS \n\n\n\n\n Detected range for 101 <= P_ID < 184 => slice(${startRow}, ${endRow})`);
-  } else if (firstPID >= 601 && firstPID < 670) {
+  } else if (firstPID >= 601 && firstPID < 691) {
     // You see from the logs that P_ID=68 is at index 11, so let's include row 11
     startRow = 602 - 2;
-    endRow = 670 -1 ;
+    endRow = 691 -1 ;
     console.log(` KINGS \n\n\n\n\n\n\ KINGS \n\n\n\n\n\n\ KINGS \n\n\n\n\n Detected range for 67 <= P_ID < 79 => slice(${startRow}, ${endRow})`);
   } else {
     console.log("No specific range for this P_ID, skipping...");
