@@ -70,6 +70,9 @@ async function fetchPriceData(startRow, endRow) {
  * 2) Extract P_IDs from the user's message, sum MRP from the Google Sheets data,
  *    and apply discount/tax/packing fee.
  */
+
+/*
+/////Old One ///////////////
 async function extractOrderDetails(message) {
   console.log("=== [extractOrderDetails] Incoming message ===");
   console.log(message);
@@ -240,6 +243,172 @@ async function extractOrderDetails(message) {
     finalPicapoolPrice
   };
 }
+  */
+
+async function extractOrderDetails(message) {
+  console.log("=== [extractOrderDetails] Incoming message ===");
+  console.log(message);
+
+  // (A) Find the first P_ID
+  const regex = /\(P_ID:\s*(\d+)\)/g;
+  let match = regex.exec(message);  // use `let` if reassigning
+  console.log("--- [extractOrderDetails] Regex match =>", match);
+
+  let firstPID = null;
+  if (match) {
+    firstPID = parseInt(match[1], 10);
+  }
+  console.log("--- [extractOrderDetails] firstPID =>", firstPID);
+
+  // (B) Decide the slice for the CSV
+  let startRow = 0;
+  let endRow = 0;
+  if (firstPID >= 101 && firstPID < 184) {
+    startRow = 2 - 2;   // or the correct index for that group
+    endRow = 92 - 1;    // or the correct end for that group
+    console.log(` DOMINOSS \n\n\n\n\n\n\ DOMINOS \n\n\n\n\n\n\ DOMINOS \n\n\n\n\n Detected range for 101 <= P_ID < 184 => slice(${startRow}, ${endRow})`);
+  } else if (firstPID >= 601 && firstPID < 691) {
+    startRow = 602 - 2;
+    endRow = 691 - 1;
+    console.log(` KINGS \n\n\n\n\n\n\ KINGS \n\n\n\n\n\n\ KINGS \n\n\n\n\n Detected range for 67 <= P_ID < 79 => slice(${startRow}, ${endRow})`);
+  } else {
+    console.log("No specific range for this P_ID, skipping...");
+    return;
+  }
+
+  // (C) Fetch the partial data
+  const priceData = await fetchPriceData(startRow, endRow);
+
+  // (d) Prepare for capturing details
+  let orderItems = [];
+  let basePrice = 0;
+  let quantityMap = {};  // This will track quantities for each P_ID
+  let productMRPs = []; // just store the numerical MRP for each found P_ID
+
+  // (d) Searching for (P_ID: XXX) patterns...
+  console.log("--- [extractOrderDetails] Searching for '(P_ID: XXX)' patterns...");
+
+  // (1) Handle the first item separately
+  if (match) {
+    let pID = match[1];
+    if (priceData[pID]) {
+      let itemData = priceData[pID];
+      let numericMRP = itemData.price; // MRP from the sheet
+      let itemName = itemData.name;    // e.g. "Farmhouse (Regular)"
+      let itemImage = itemData.image;  // Full image link
+
+      console.log(` -> Found P_ID ${pID}: ${itemName}, MRP = ${numericMRP}`);
+
+      // Increment quantity for this P_ID
+      if (quantityMap[pID]) {
+        quantityMap[pID].quantity += 1; // Increment quantity
+      } else {
+        quantityMap[pID] = {
+          name: itemName,
+          price: numericMRP,
+          image: itemImage,
+          quantity: 1  // Start with quantity 1 for the first instance
+        };
+      }
+    } else {
+      console.warn(`   Warning: No data for P_ID ${pID}`);
+    }
+  }
+
+  // (2) Continue with the rest of the items
+  while ((match = regex.exec(message)) !== null) {
+    let pID = match[1];
+    if (priceData[pID]) {
+      let itemData = priceData[pID];
+      let numericMRP = itemData.price; // MRP from the sheet
+      let itemName = itemData.name;    // e.g. "Farmhouse (Regular)"
+      let itemImage = itemData.image;  // Full image link
+
+      console.log(` -> Found P_ID ${pID}: ${itemName}, MRP = ${numericMRP}`);
+
+      // Increment quantity for this P_ID
+      if (quantityMap[pID]) {
+        quantityMap[pID].quantity += 1; // Increment quantity
+      } else {
+        quantityMap[pID] = {
+          name: itemName,
+          price: numericMRP,
+          image: itemImage,
+          quantity: 1  // Start with quantity 1 for the first instance
+        };
+      }
+    } else {
+      console.warn(`   Warning: No data for P_ID ${pID}`);
+    }
+  }
+
+  // Now, prepare the orderItems array with combined quantities
+  for (let pID in quantityMap) {
+    let item = quantityMap[pID];
+    let totalPrice = item.price * item.quantity;
+    let updatedName = `${item.name} (Quantity x${item.quantity})`;
+
+    orderItems.push({
+      pID,
+      name: updatedName,
+      mrp: totalPrice,  // Total price for this grouped item
+      image: item.image,
+    });
+
+    basePrice += totalPrice;
+    productMRPs.push(totalPrice); // Add to the productMRPs array
+  }
+
+  console.log("[extractOrderDetails] Base total (MRP sum) =", basePrice);
+
+  // (d) Now apply Additional discount of ₹60, then Picapool discount of 10%
+  let totalAfterDiscounts = 0;
+
+  if (firstPID < 500) {
+    totalAfterDiscounts = (basePrice - ADDITIONAL_DISCOUNT) * (1 - PICAPOOL_DISCOUNT_RATE);
+  } else {
+    totalAfterDiscounts = basePrice;
+  }
+
+  // (e) Distribute final discounted amount across items proportionally
+  let sumSalePrice = 0.0;
+
+  orderItems = orderItems.map((item) => {
+    // fraction for this item
+    const fraction = item.mrp / basePrice;
+    const salePrice = totalAfterDiscounts * fraction;
+
+    sumSalePrice += salePrice;
+
+    return {
+      pID: item.pID,
+      name: item.name,
+      price: salePrice,      // The discounted price for WhatsApp
+      image: item.image,
+      mrp: item.mrp          // Keep MRP if you want to store it, optional
+    };
+  });
+
+  // (f) Calculate tax and final price
+  const taxAmount = sumSalePrice * TAX_RATE;
+  const finalPicapoolPrice = (sumSalePrice + DELIVERY_FEE) + (basePrice * TAX_RATE);
+
+  console.log("[extractOrderDetails] totalAfterDiscounts  =", totalAfterDiscounts);
+  console.log("[extractOrderDetails] sumSalePrice (total discounted) =", sumSalePrice);
+  console.log("[extractOrderDetails] taxAmount (5%)               =", taxAmount);
+  console.log("[extractOrderDetails] delivery                    =", DELIVERY_FEE);
+  console.log("[extractOrderDetails] finalPicapoolPrice         =", finalPicapoolPrice);
+
+  // Return everything needed
+  return {
+    orderItems,
+    basePrice,
+    sumSalePrice,          // sum of sale price of all items
+    taxAmount,
+    finalPicapoolPrice
+  };
+}
+
 /**
  * 3) Calculate final price *with* Picapool discount on each item, plus tax, packing fee, minus extra discount.
  */

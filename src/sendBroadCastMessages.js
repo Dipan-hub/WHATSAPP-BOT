@@ -38,3 +38,9 @@ async function sendMessagesFromFile(filename, message) {
 // File '../phoneNumbers.txt' contains the numbers and we want to send a message.
 const message = "Hello, this is Picapool -- Running this script!"; // Message to send
 sendMessagesFromFile('./src/phoneNumbers.txt', message); // Use relative path to the text file
+
+/*
+How to run 
+
+node src/sendBroadCastMessages.js
+*/
