@@ -254,7 +254,7 @@ if (referenceId) {
 const message = `
 🎉 Woahh!! Your payment of *₹${amount/100}* has been successfully received! 🎉
 
-Thank you for choosing *Picpaool*. We're excited to process your order! 🚀
+Thank you for choosing *Picapool*. We're excited to process your order! 🚀
 
 --------------------
 Order ID: ${referenceIdLastThree}
