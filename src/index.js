@@ -16,7 +16,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const ADMIN_NUMBER = '918917602924';  // your admin's WhatsApp
-const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID } = process.env;
+const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID,OFFER_ACTIVE } = process.env;
 
 // Global variables for order limit tracking
 let dailyOrderCount = 0;
@@ -132,7 +132,7 @@ Your order has been received.`;
 
       // For non-admin senders, check if we've reached today's order limit
       
-      if (true) {
+      if (OFFER_ACTIVE) {
         forwardMessageToAdmin(from, msgBody);
         //const orderLimitMsg = "We have reached today's order limit of 20 orders, please come back soon!";
         const orderLimitMsg = `
