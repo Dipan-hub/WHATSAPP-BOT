@@ -290,9 +290,11 @@ console.log(message);
 
 console.log("Order details:", message);
 await sendWhatsAppMessage(recipient, message);
-await sendWhatsAppMessage(918917602924, message);
-await sendWhatsAppMessage(917224052216, message);
-await sendWhatsAppMessage(918143405112, message);
+await sendWhatsAppMessage(918917602924, message); //Dipan
+await sendWhatsAppMessage(917224052216, message); //Picapool Bot
+await sendWhatsAppMessage(918143405112, message);  //Imran
+await sendWhatsAppMessage(918328612960, message);  //Sandeep
+await sendWhatsAppMessage(919462577650, message);  //Varun
 
 // Optionally, you can send the message to WhatsApp or any other platform here
 
