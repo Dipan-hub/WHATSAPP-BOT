@@ -266,7 +266,7 @@ ${itemNames}
 Delivery Address: ${selectedOption || "Not Provided"}
 Phone Number: ${recipient || "Not Provided"}
 
-We're starting the processing of your order now, and it will be with you soon!
+We're starting the processing of your order now, and it will be with you soon! (around 50 mins)
 
 Thank you once again for trusting us. If you have any questions, feel free to reach out. 😊
 `;
@@ -291,10 +291,29 @@ console.log(message);
 console.log("Order details:", message);
 await sendWhatsAppMessage(recipient, message);
 await sendWhatsAppMessage(918917602924, message); //Dipan
-await sendWhatsAppMessage(917224052216, message); //Picapool Bot
-await sendWhatsAppMessage(918143405112, message);  //Imran
-await sendWhatsAppMessage(918328612960, message);  //Sandeep
-await sendWhatsAppMessage(919462577650, message);  //Varun
+
+
+// Formatting the message for WhatsApp or another platform
+const message2 = `
+🎉 Woahh!! Your payment of *₹${amount/1025}* has been successfully received! 🎉
+
+--------------------
+Order ID: ${referenceIdLastThree}
+
+Items Ordered:
+${itemNames}
+--------------------
+
+Delivery Address: ${selectedOption || "Not Provided"}
+Phone Number: ${recipient || "Not Provided"}
+
+****************
+`;
+
+await sendWhatsAppMessage(917224052216, message2); //Picapool Bot
+await sendWhatsAppMessage(918143405112, message2);  //Imran
+await sendWhatsAppMessage(918328612960, message2);  //Sandeep
+await sendWhatsAppMessage(919462577650, message2);  //Varun
 
 // Optionally, you can send the message to WhatsApp or any other platform here
 
