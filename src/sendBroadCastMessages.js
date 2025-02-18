@@ -36,7 +36,7 @@ async function sendMessagesFromFile(filename, message) {
 
 // Example usage:
 // File '../phoneNumbers.txt' contains the numbers and we want to send a message.
-const message = "Hello, this is Picapool -- Running this script!"; // Message to send
+const message = "Hello ,you can now start placing your orders with Picapool!"; // Message to send
 sendMessagesFromFile('./src/phoneNumbers.txt', message); // Use relative path to the text file
 
 /*
