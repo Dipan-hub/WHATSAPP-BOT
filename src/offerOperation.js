@@ -1,5 +1,5 @@
 // src/offerOperation.js
-const { getSheetsClient } = require('./googlesheetoperation');
+const { getSheetsClient } = require('./googleSheetOperation.js');
 const { sendWhatsAppMessage } = require('./whatsapp');
 
 // IDs for the two sheets are set as environment variables.
