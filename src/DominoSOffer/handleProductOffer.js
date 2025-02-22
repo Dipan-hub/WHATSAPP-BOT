@@ -295,7 +295,7 @@ await sendWhatsAppMessage(918917602924, message); //Dipan
 
 // Formatting the message for WhatsApp or another platform
 const message2 = `
-🎉 Woahh!! Your payment of *₹${amount/102.5}* has been successfully received! 🎉
+🎉 Woahh!! Your payment of *₹${amount/1025}* has been successfully received! 🎉
 
 --------------------
 Order ID: ${referenceIdLastThree}
