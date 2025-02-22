@@ -22,6 +22,23 @@ const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID,OFFER_ACTIVE } = process.env;
 let dailyOrderCount = 0;
 const DAILY_ORDER_LIMIT = 20;
 
+// index.js
+console.log("Starting index.js...");
+
+// Import our custom Google Sheet operation module
+const { performSheetOperation } = require('./googleSheetOperation');
+
+(async () => {
+  try {
+    console.log("Calling performSheetOperation()...");
+    await performSheetOperation();
+    console.log("Operation completed successfully.");
+  } catch (error) {
+    console.error("Error in main execution:", error);
+  }
+})();
+
+
 // Quick function to send a normal text message to a WhatsApp user
 function sendMessage(to, msgBody) {
   const url = `https://graph.facebook.com/v16.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;

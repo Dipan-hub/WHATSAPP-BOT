@@ -13,14 +13,23 @@
     "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "googleapis": "^144.0.0",
     "node-fetch": "^2.6.7",
-    "papaparse": "^5.3.2",
-    "express": "^4.21.2"
+    "papaparse": "^5.3.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
   },
   "engines": {
     "node": "23.6.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dipan-hub/WHATSAPP-BOT.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Dipan-hub/WHATSAPP-BOT/issues"
+  },
+  "homepage": "https://github.com/Dipan-hub/WHATSAPP-BOT#readme"
 }
