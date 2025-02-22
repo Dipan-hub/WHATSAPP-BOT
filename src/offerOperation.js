@@ -174,58 +174,75 @@ async function handleSrijanOffer(from, msgBody) {
   const totalCount = groupRows.length + 1;
   console.log(`Total count after appending new row: ${totalCount}`);
 
-  // 10. If total count reaches or exceeds the min threshold, update unconfirmed rows.
-  if (totalCount >= minThreshold) {
-      console.log(`Threshold reached (min = ${minThreshold}). Processing confirmation/waitlist notifications for group rows...`);
-      // Get the most recent data from the sheet to have accurate row data.
-      let updatedUserData = [];
-      try {
-        const res2 = await sheets.spreadsheets.values.get({
-          spreadsheetId: USER_SHEET_ID,
-          range: 'Sheet1!A:H',
-        });
-        updatedUserData = res2.data.values || [];
-      } catch (error) {
-        console.error("Error reading updated user sheet data:", error);
-        return;
-      }
-      // Process each row in the group that has the same S_ID and OfferName.
-      for (let i = 0; i < updatedUserData.length; i++) {
-        const row = updatedUserData[i];
-        if (row[1] === parsed.sId && row[3].toLowerCase() === parsed.offerName.toLowerCase()) {
-          // If the row is confirmed (Confirm column = "1"), re-send the same code.
-          if (row[6] === "1" && row[7] && row[7].trim().length > 0) {
-            console.log(`Row ${i + 2} is confirmed. Re-sending code ${row[7]} to ${row[4]}.`);
-            const userMessage = `Your offer "${parsed.offerName}" is confirmed. Use code ${row[7]} to proceed.`;
-            try {
-              await sendWhatsAppMessage(row[4], userMessage);
-            } catch (error) {
-              console.error(`Error sending confirmation message to ${row[4]}:`, error);
-            }
-          }
-          // If the row is not confirmed (Confirm column = "0"), send a waitlist message.
-          else if (row[6] === "0") {
-            console.log(`Row ${i + 2} is not yet confirmed. Sending waitlist notification to ${row[4]}.`);
-            const waitlistMessage = `You are waitlisted for offer "${parsed.offerName}". We are waiting for additional confirmations.`;
-            try {
-              await sendWhatsAppMessage(row[4], waitlistMessage);
-            } catch (error) {
-              console.error(`Error sending waitlist message to ${row[4]}:`, error);
+      // 10. If total count reaches or exceeds the min threshold, process the group.
+      if (totalCount >= minThreshold) {
+        console.log(`Threshold reached (min = ${minThreshold}). Processing group rows...`);
+        
+        // Re-read updated user sheet data to work with the latest state.
+        let updatedUserData = [];
+        try {
+          const res2 = await sheets.spreadsheets.values.get({
+            spreadsheetId: USER_SHEET_ID,
+            range: 'Sheet1!A:H',
+          });
+          updatedUserData = res2.data.values || [];
+          console.log("Updated user sheet data:", updatedUserData);
+        } catch (error) {
+          console.error("Error reading updated user sheet data:", error);
+          return;
+        }
+        
+        // Iterate over updated rows to update and notify those in our group.
+        for (let i = 0; i < updatedUserData.length; i++) {
+          const row = updatedUserData[i];
+          // Check if the row belongs to our group.
+          if (row[1] === parsed.sId && row[3].toLowerCase() === parsed.offerName.toLowerCase()) {
+            // Compute the actual sheet row number (accounting for header row).
+            const rowNumber = i + 2;
+            // If the row is unconfirmed, update it to confirmed and generate a code.
+            if (row[6] === "0") {
+              const code = generateCode(parsed.offerId, parsed.sId, row[4]);
+              const updateRange = `Sheet1!G${rowNumber}:H${rowNumber}`;
+              try {
+                await sheets.spreadsheets.values.update({
+                  spreadsheetId: USER_SHEET_ID,
+                  range: updateRange,
+                  valueInputOption: 'USER_ENTERED',
+                  resource: { values: [["1", code]] },
+                });
+                console.log(`Updated row ${rowNumber} with confirmation and code ${code}`);
+                // Send confirmation message.
+                const userMessage = `Your offer "${parsed.offerName}" is confirmed. Use code ${code} to proceed.`;
+                await sendWhatsAppMessage(row[4], userMessage);
+                console.log(`Sent confirmation message to ${row[4]}`);
+              } catch (error) {
+                console.error(`Error updating row ${rowNumber}:`, error);
+              }
+            } 
+            // If already confirmed, re-send the existing code.
+            else if (row[6] === "1" && row[7] && row[7].trim().length > 0) {
+              console.log(`Row ${rowNumber} already confirmed. Re-sending code ${row[7]} to ${row[4]}.`);
+              const userMessage = `Your offer "${parsed.offerName}" is confirmed. Use code ${row[7]} to proceed.`;
+              try {
+                await sendWhatsAppMessage(row[4], userMessage);
+              } catch (error) {
+                console.error(`Error re-sending message to ${row[4]}:`, error);
+              }
             }
           }
         }
-      }
-      // Notify vendor that the group has reached the threshold.
-      const vendorMessage = `For offer "${parsed.offerName}", the confirmation threshold has been reached. Please check the user sheet for confirmed and waitlisted users.`;
-      try {
-        await sendWhatsAppMessage(vendorContact, vendorMessage);
-        console.log(`Sent WhatsApp message to vendor ${vendorContact}`);
-      } catch (error) {
-        console.error("Error sending message to vendor:", error);
-      }
-    } else {
-      console.log("Min threshold not yet reached; no confirmation or waitlist notifications sent.");
-    }
+        
+        // Notify the vendor that confirmation threshold has been reached.
+        const vendorMessage = `For offer "${parsed.offerName}", the confirmation threshold has been reached. Please check the user sheet for details.`;
+        try {
+          await sendWhatsAppMessage(vendorContact, vendorMessage);
+          console.log(`Sent vendor notification to ${vendorContact}`);
+        } catch (error) {
+          console.error("Error sending vendor notification:", error);
+        }
+      } else {
+        console.log("Min threshold not yet reached; no update performed.");
+      }  
   
 }
 
