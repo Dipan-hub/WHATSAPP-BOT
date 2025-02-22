@@ -8,6 +8,7 @@ const axios = require('axios');
 const { handleProductOffer, handlePaymentConfirmation , PaymentConfirmationMessage} = require('./DominoSOffer/handleProductOffer');
 const { handleLiveOffer } = require('./CabOffer/handleLiveOffer.js');
 const { handlePicapoolOffer } = require('./GroupOffer/handlePicapoolOffer');
+const { handleSrijanOffer } = require('./offerOperation.js');
 
 // Import the Razorpay interactive message function
 // const { sendRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
@@ -26,18 +27,6 @@ const DAILY_ORDER_LIMIT = 20;
 console.log("Starting index.js...");
 
 // Import our custom Google Sheet operation module
-const { performSheetOperation } = require('./googleSheetOperation');
-
-(async () => {
-  try {
-    console.log("Calling performSheetOperation()...");
-    await performSheetOperation();
-    console.log("Operation completed successfully.");
-  } catch (error) {
-    console.error("Error in main execution:", error);
-  }
-})();
-
 
 // Quick function to send a normal text message to a WhatsApp user
 function sendMessage(to, msgBody) {
@@ -195,7 +184,11 @@ Your order has been received.`;
           // Another handler for Picapool offers
           await handlePicapoolOffer(from, msgBody);
           dailyOrderCount++;
-        } else {
+        } else if (msgBody && msgBody.includes("S_ID")) {
+          // Some other handler for live offers
+          await handleSrijanOffer(from, msgBody);
+          dailyOrderCount++;
+        }else {
           // Fallback: you can add any default behavior here
         }
       }
