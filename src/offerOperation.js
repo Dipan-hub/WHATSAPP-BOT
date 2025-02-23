@@ -2,7 +2,6 @@
 const { getSheetsClient } = require('./googleSheetOperation');
 const { sendWhatsAppMessage } = require('./whatsapp');
 
-// These IDs are set as environment variables.
 const USER_SHEET_ID = process.env.USER_SHEET_ID;
 const VENDOR_SHEET_ID = process.env.VENDOR_SHEET_ID;
 
@@ -32,7 +31,7 @@ function parseMessage(msgBody) {
 
 /**
  * Generate a confirmation code.
- * (The full code is stored, but only the last 6 characters are shown in messages.)
+ * (The full code is stored in the sheet, but only the last 6 characters are shown in messages.)
  */
 function generateCode(offerId, sId, phone) {
   const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -41,9 +40,25 @@ function generateCode(offerId, sId, phone) {
 
 /**
  * Main function to handle an incoming offer message.
+ *
+ * Flow:
+ * 1. Parse the message.
+ * 2. Look up the vendor record (by OfferName) to get MIN threshold and vendor contact.
+ * 3. Read the user sheet (data rows only, using range 'Sheet1!A2:H') to check for existing entries.
+ *    - If an entry for the same S_ID, OfferName, and phone exists, re-send confirmation (if confirmed) or waitlist message.
+ * 4. If no entry exists, determine the group number (Sno)—reusing it if there’s an existing group; otherwise, assign a new one.
+ *    Append a new row with Confirm="0".
+ * 5. Re-read the updated user sheet (again using 'Sheet1!A2:H') so that the first data row is row 2.
+ * 6. Filter the rows for the group and count them.
+ * 7. If the group count meets/exceeds MIN threshold:
+ *      For each unconfirmed row in the group, update that same row (using its absolute sheet row number computed as i+2)
+ *      by setting Confirm to "1" and storing a generated code. When sending a confirmation message, display only the last 6 characters.
+ *    Otherwise, send a waitlist message to the new entry.
+ * 8. Optionally, notify the vendor.
  */
 async function handleSrijanOffer(from, msgBody) {
   console.log("=== Handling offer message from:", from, "===");
+
   let parsed;
   try {
     parsed = parseMessage(msgBody);
@@ -55,12 +70,12 @@ async function handleSrijanOffer(from, msgBody) {
 
   const sheets = await getSheetsClient();
 
-  // Step 2. Look up vendor details based on OfferName.
+  // Step 2. Lookup vendor details based on OfferName.
   let vendorData = [];
   try {
     const vendorRes = await sheets.spreadsheets.values.get({
       spreadsheetId: VENDOR_SHEET_ID,
-      range: 'Sheet2!A:E' // Ensure the vendor sheet tab is exactly "Sheet2"
+      range: 'Sheet2!A:E' // Ensure the vendor sheet tab is exactly named "Sheet2"
     });
     vendorData = vendorRes.data.values || [];
     console.log("Vendor sheet data:", vendorData);
@@ -80,7 +95,7 @@ async function handleSrijanOffer(from, msgBody) {
   const vendorContact = vendorRow[4];
   console.log(`Vendor details: MIN=${minThreshold}, Contact=${vendorContact}`);
 
-  // Step 3. Read the current user sheet data for group (matching S_ID and OfferName).
+  // Step 3. Read the current user sheet data (data rows only; header excluded)
   let userData = [];
   try {
     const res = await sheets.spreadsheets.values.get({
@@ -94,7 +109,7 @@ async function handleSrijanOffer(from, msgBody) {
     return;
   }
 
-  // Step 4. Check if an entry already exists for the same S_ID, OfferName, and phone.
+  // Step 4. Check for an existing entry for the same S_ID, OfferName, and phone.
   const existingEntry = userData.find(row =>
     row[1] === parsed.sId &&
     row[3] && row[3].toLowerCase() === parsed.offerName.toLowerCase() &&
@@ -103,7 +118,7 @@ async function handleSrijanOffer(from, msgBody) {
   if (existingEntry) {
     console.log(`Existing entry found for phone ${from} in group ${existingEntry[0]}.`);
     if (existingEntry[6] === "1" && existingEntry[7] && existingEntry[7].trim()) {
-      // Already confirmed: re-send the stored code (display last 6 characters).
+      // Already confirmed: re-send stored code (displaying last 6 characters).
       const displayCode = existingEntry[7].slice(-6);
       const confirmMsg = `Your offer "${parsed.offerName}" is confirmed. Use code ${displayCode} to proceed.`;
       try {
@@ -113,7 +128,7 @@ async function handleSrijanOffer(from, msgBody) {
         console.error("Error re-sending confirmation:", err);
       }
     } else {
-      // Unconfirmed: send waitlist message.
+      // Not confirmed: send waitlist message.
       const waitMsg = `You are waitlisted for offer "${parsed.offerName}". We are waiting for additional confirmations.`;
       try {
         await sendWhatsAppMessage(from, waitMsg);
@@ -122,7 +137,7 @@ async function handleSrijanOffer(from, msgBody) {
         console.error("Error sending waitlist message:", err);
       }
     }
-    return; // Stop processing since the phone already exists.
+    return;
   }
 
   // Step 4b. No existing entry: determine group number (Sno).
@@ -146,11 +161,11 @@ async function handleSrijanOffer(from, msgBody) {
     console.log(`Assigned new group number ${groupSno} for S_ID ${parsed.sId}.`);
   }
 
-  // Use the first non-empty line from the message as the username.
+  // Step 4c. Determine username (use first non-empty line from message).
   const lines = msgBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const userName = lines[0] || "Unknown";
 
-  // Build a new row: [Sno, S_ID, OfferID, OfferName, PhoneNumber, UserName, Confirm, Code]
+  // Build the new row: [Sno, S_ID, OfferID, OfferName, PhoneNumber, UserName, Confirm, Code]
   const newRow = [groupSno, parsed.sId, parsed.offerId, parsed.offerName, from, userName, "0", ""];
   
   // Append the new row.
@@ -168,12 +183,12 @@ async function handleSrijanOffer(from, msgBody) {
     return;
   }
 
-  // Step 5. Re-read the updated user sheet.
+  // Step 5. Re-read the updated user sheet (data rows only) so that header is excluded.
   let updatedUserData = [];
   try {
     const res2 = await sheets.spreadsheets.values.get({
       spreadsheetId: USER_SHEET_ID,
-      range: 'Sheet1!A:H'
+      range: 'Sheet1!A2:H'
     });
     updatedUserData = res2.data.values || [];
     console.log("Updated user sheet data:", updatedUserData);
@@ -182,7 +197,7 @@ async function handleSrijanOffer(from, msgBody) {
     return;
   }
   
-  // Filter rows for this group (same S_ID and OfferName).
+  // Filter rows for this group (matching S_ID and OfferName).
   const groupRows = updatedUserData.filter(row =>
     row[1] === parsed.sId &&
     row[3] && row[3].toLowerCase() === parsed.offerName.toLowerCase()
@@ -193,17 +208,17 @@ async function handleSrijanOffer(from, msgBody) {
   // Step 6. If group count meets/exceeds vendor MIN threshold, update each unconfirmed row.
   if (totalCount >= minThreshold) {
     console.log(`Threshold reached (MIN=${minThreshold}). Confirming group entries...`);
-    // Iterate over all rows in the updated sheet.
+    // Loop over updatedUserData (which has only data rows; index 0 corresponds to sheet row 2)
     for (let i = 0; i < updatedUserData.length; i++) {
       const row = updatedUserData[i];
       if (
         row[1] === parsed.sId &&
         row[3] && row[3].toLowerCase() === parsed.offerName.toLowerCase()
       ) {
-        // Compute the sheet row number (add 1 for header offset).
+        // Absolute sheet row number = i + 2 (since our data starts at row 2).
         const sheetRowNum = i + 2;
         if (row[6] === "0") {
-          // Unconfirmed: generate a full code and update the same row.
+          // Update the same row.
           const fullCode = generateCode(parsed.offerId, parsed.sId, row[4]);
           const updateRange = `Sheet1!G${sheetRowNum}:H${sheetRowNum}`;
           try {
@@ -214,7 +229,6 @@ async function handleSrijanOffer(from, msgBody) {
               resource: { values: [["1", fullCode]] }
             });
             console.log(`Updated row ${sheetRowNum}: set Confirm=1 and Code=${fullCode}.`);
-            // Send confirmation message showing only the last 6 characters.
             const displayCode = fullCode.slice(-6);
             const confirmMsg = `Your offer "${parsed.offerName}" is confirmed. Use code ${displayCode} to proceed.`;
             await sendWhatsAppMessage(row[4], confirmMsg);
@@ -223,7 +237,7 @@ async function handleSrijanOffer(from, msgBody) {
             console.error(`Error updating row ${sheetRowNum}:`, error);
           }
         } else if (row[6] === "1" && row[7] && row[7].trim()) {
-          // Already confirmed: re-send the confirmation message (show only last 6 characters).
+          // Already confirmed: re-send the confirmation.
           const displayCode = row[7].slice(-6);
           const confirmMsg = `Your offer "${parsed.offerName}" is confirmed. Use code ${displayCode} to proceed.`;
           try {
@@ -235,7 +249,7 @@ async function handleSrijanOffer(from, msgBody) {
         }
       }
     }
-    // Notify vendor that the threshold has been reached.
+    // Step 7. Notify vendor.
     const vendorMsg = `Offer "${parsed.offerName}" (S_ID: ${parsed.sId}) has reached the minimum threshold.`;
     try {
       await sendWhatsAppMessage(vendorContact, vendorMsg);
