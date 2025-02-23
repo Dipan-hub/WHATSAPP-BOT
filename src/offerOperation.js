@@ -31,7 +31,7 @@ function parseMessage(msgBody) {
 
 /**
  * Generate a confirmation code.
- * (The full code is stored in the sheet, but only the last 6 characters are shown in messages.)
+ * (Full code is stored; messages show only the last 6 characters.)
  */
 function generateCode(offerId, sId, phone) {
   const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -39,26 +39,88 @@ function generateCode(offerId, sId, phone) {
 }
 
 /**
+ * Inserts a new row at a specific position in the sheet.
+ * 
+ * @param {Object} sheets - Authenticated Google Sheets client.
+ * @param {number} insertionIndex - Zero-indexed relative to data rows (e.g. if data starts at row2, insertionIndex=0 means row2).
+ * @param {Array} newRow - Array of cell values for the new row.
+ */
+async function insertRowAt(sheets, insertionIndex, newRow) {
+  // Assuming the user sheet is Sheet1 with sheetId 0.
+  const sheetId = 0;
+  // The absolute sheet row number = insertionIndex + 2 (since data starts at row2)
+  const absoluteRow = insertionIndex + 2;
+  
+  // Insert a blank row at the desired position.
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: USER_SHEET_ID,
+    resource: {
+      requests: [
+        {
+          insertDimension: {
+            range: {
+              sheetId: sheetId,
+              dimension: "ROWS",
+              startIndex: absoluteRow - 1, // zero-indexed: row2 is index 1
+              endIndex: absoluteRow
+            },
+            inheritFromBefore: true
+          }
+        }
+      ]
+    }
+  });
+  
+  // Now update that newly inserted row with newRow data.
+  const updateRange = `Sheet1!A${absoluteRow}:H${absoluteRow}`;
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: USER_SHEET_ID,
+    range: updateRange,
+    valueInputOption: 'USER_ENTERED',
+    resource: { values: [newRow] }
+  });
+}
+
+/**
+ * Constructs an interactive waitlist message.
+ * Shows the offer, chat id, list of usernames already in the group, and minimum required.
+ */
+function buildWaitlistMessage(parsed, groupRows, minThreshold) {
+  const usernames = groupRows.map(row => row[5]).filter(name => name && name.trim());
+  return `*Offer:* ${parsed.offerName} (Chat ID: ${parsed.sId})
+*Participants Joined:*
+${usernames.map(u => `- ${u}`).join('\n')}
+*Minimum required:* ${minThreshold}
+Invite more friends to join and secure your coupon code!`;
+}
+
+/**
+ * Constructs an interactive confirmation message.
+ * Displays the coupon code (only last 6 characters) in a friendly format.
+ */
+function buildConfirmationMessage(parsed, displayCode) {
+  return `*Congratulations!* Your offer "${parsed.offerName}" is confirmed.
+*Your Coupon Code:* ${displayCode}
+Use this code to proceed with your purchase.`;
+}
+
+/**
+ * Constructs a vendor notification message listing new confirmations.
+ * Only includes those users who were updated from unconfirmed to confirmed.
+ */
+function buildVendorNotificationMessage(parsed, confirmations) {
+  let msg = `*Offer Update:* ${parsed.offerName} (Chat ID: ${parsed.sId})\nThe following users have just been confirmed:\n`;
+  confirmations.forEach(item => {
+    msg += `- ${item.userName} (Phone: ${item.phone}) -> Code: ${item.displayCode}\n`;
+  });
+  return msg;
+}
+
+/**
  * Main function to handle an incoming offer message.
- *
- * Flow:
- * 1. Parse the message.
- * 2. Look up the vendor record (by OfferName) to get MIN threshold and vendor contact.
- * 3. Read the user sheet (data rows only, using range 'Sheet1!A2:H') to check for existing entries.
- *    - If an entry for the same S_ID, OfferName, and phone exists, re-send confirmation (if confirmed) or waitlist message.
- * 4. If no entry exists, determine the group number (Sno)—reusing it if there’s an existing group; otherwise, assign a new one.
- *    Append a new row with Confirm="0".
- * 5. Re-read the updated user sheet (again using 'Sheet1!A2:H') so that the first data row is row 2.
- * 6. Filter the rows for the group and count them.
- * 7. If the group count meets/exceeds MIN threshold:
- *      For each unconfirmed row in the group, update that same row (using its absolute sheet row number computed as i+2)
- *      by setting Confirm to "1" and storing a generated code. When sending a confirmation message, display only the last 6 characters.
- *    Otherwise, send a waitlist message to the new entry.
- * 8. Optionally, notify the vendor.
  */
 async function handleSrijanOffer(from, msgBody) {
   console.log("=== Handling offer message from:", from, "===");
-
   let parsed;
   try {
     parsed = parseMessage(msgBody);
@@ -70,17 +132,17 @@ async function handleSrijanOffer(from, msgBody) {
 
   const sheets = await getSheetsClient();
 
-  // Step 2. Lookup vendor details based on OfferName.
+  // Step 2. Lookup vendor details.
   let vendorData = [];
   try {
     const vendorRes = await sheets.spreadsheets.values.get({
       spreadsheetId: VENDOR_SHEET_ID,
-      range: 'Sheet2!A:E' // Ensure the vendor sheet tab is exactly named "Sheet2"
+      range: 'Sheet2!A:E'
     });
     vendorData = vendorRes.data.values || [];
     console.log("Vendor sheet data:", vendorData);
   } catch (error) {
-    console.error("Error reading vendor sheet. Check the tab name and range.", error);
+    console.error("Error reading vendor sheet. Check tab name/range.", error);
     return;
   }
   const vendorRow = vendorData.find(row =>
@@ -93,9 +155,9 @@ async function handleSrijanOffer(from, msgBody) {
   }
   const minThreshold = parseInt(vendorRow[3], 10);
   const vendorContact = vendorRow[4];
-  console.log(`Vendor details: MIN=${minThreshold}, Contact=${vendorContact}`);
+  console.log(`Vendor: MIN=${minThreshold}, Contact=${vendorContact}`);
 
-  // Step 3. Read the current user sheet data (data rows only; header excluded)
+  // Step 3. Read user sheet data (data rows only, from A2:H).
   let userData = [];
   try {
     const res = await sheets.spreadsheets.values.get({
@@ -109,7 +171,7 @@ async function handleSrijanOffer(from, msgBody) {
     return;
   }
 
-  // Step 4. Check for an existing entry for the same S_ID, OfferName, and phone.
+  // Step 4. Check if an entry for S_ID, OfferName, and phone already exists.
   const existingEntry = userData.find(row =>
     row[1] === parsed.sId &&
     row[3] && row[3].toLowerCase() === parsed.offerName.toLowerCase() &&
@@ -118,9 +180,8 @@ async function handleSrijanOffer(from, msgBody) {
   if (existingEntry) {
     console.log(`Existing entry found for phone ${from} in group ${existingEntry[0]}.`);
     if (existingEntry[6] === "1" && existingEntry[7] && existingEntry[7].trim()) {
-      // Already confirmed: re-send stored code (displaying last 6 characters).
       const displayCode = existingEntry[7].slice(-6);
-      const confirmMsg = `Your offer "${parsed.offerName}" is confirmed. Use code ${displayCode} to proceed.`;
+      const confirmMsg = buildConfirmationMessage(parsed, displayCode);
       try {
         await sendWhatsAppMessage(from, confirmMsg);
         console.log(`Re-sent confirmation to ${from} with code ${displayCode}.`);
@@ -128,8 +189,9 @@ async function handleSrijanOffer(from, msgBody) {
         console.error("Error re-sending confirmation:", err);
       }
     } else {
-      // Not confirmed: send waitlist message.
-      const waitMsg = `You are waitlisted for offer "${parsed.offerName}". We are waiting for additional confirmations.`;
+      const waitMsg = buildWaitlistMessage(parsed, userData.filter(row =>
+        row[1] === parsed.sId && row[3] && row[3].toLowerCase() === parsed.offerName.toLowerCase()
+      ), minThreshold);
       try {
         await sendWhatsAppMessage(from, waitMsg);
         console.log(`Sent waitlist message to ${from}.`);
@@ -140,16 +202,18 @@ async function handleSrijanOffer(from, msgBody) {
     return;
   }
 
-  // Step 4b. No existing entry: determine group number (Sno).
+  // Step 4b. Determine group number (Sno).
   let groupSno;
-  const groupRow = userData.find(row =>
+  const groupRows = userData.filter(row =>
     row[1] === parsed.sId &&
     row[3] && row[3].toLowerCase() === parsed.offerName.toLowerCase()
   );
-  if (groupRow) {
-    groupSno = groupRow[0]; // Reuse the existing group number.
+  if (groupRows.length > 0) {
+    // Use the group number from an existing row.
+    groupSno = groupRows[0][0];
     console.log(`Using existing group number ${groupSno} for S_ID ${parsed.sId}.`);
   } else {
+    // New group: new Sno = (max existing Sno + 1) or 1 if none.
     let maxSno = 0;
     userData.forEach(row => {
       if (row && row[0]) {
@@ -161,29 +225,36 @@ async function handleSrijanOffer(from, msgBody) {
     console.log(`Assigned new group number ${groupSno} for S_ID ${parsed.sId}.`);
   }
 
-  // Step 4c. Determine username (use first non-empty line from message).
+  // Step 4c. Determine username (first non-empty line from message).
   const lines = msgBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const userName = lines[0] || "Unknown";
 
-  // Build the new row: [Sno, S_ID, OfferID, OfferName, PhoneNumber, UserName, Confirm, Code]
+  // Build new row.
   const newRow = [groupSno, parsed.sId, parsed.offerId, parsed.offerName, from, userName, "0", ""];
-  
-  // Append the new row.
+
+  // Step 4d. Insert the new row in sorted order.
+  // If group already exists, insert immediately after the last row of that group.
+  let insertionIndex = userData.length; // default: append at end.
+  if (groupRows.length > 0) {
+    // Find the last occurrence index (in the current userData array) where Sno equals groupSno.
+    let lastIndex = -1;
+    for (let i = 0; i < userData.length; i++) {
+      if (userData[i][0] === groupSno) {
+        lastIndex = i;
+      }
+    }
+    insertionIndex = lastIndex + 1; // insert after the last row of the group.
+  }
+  console.log(`Inserting new row at data index ${insertionIndex} (sheet row ${insertionIndex + 2}).`);
   try {
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: USER_SHEET_ID,
-      range: 'Sheet1!A:H',
-      valueInputOption: 'USER_ENTERED',
-      insertDataOption: 'INSERT_ROWS',
-      resource: { values: [newRow] }
-    });
-    console.log("Appended new row:", newRow);
+    await insertRowAt(sheets, insertionIndex, newRow);
+    console.log("Inserted new row:", newRow);
   } catch (error) {
-    console.error("Error appending new row:", error);
+    console.error("Error inserting new row:", error);
     return;
   }
 
-  // Step 5. Re-read the updated user sheet (data rows only) so that header is excluded.
+  // Step 5. Re-read updated user sheet (data rows only).
   let updatedUserData = [];
   try {
     const res2 = await sheets.spreadsheets.values.get({
@@ -197,28 +268,29 @@ async function handleSrijanOffer(from, msgBody) {
     return;
   }
   
-  // Filter rows for this group (matching S_ID and OfferName).
-  const groupRows = updatedUserData.filter(row =>
+  // Refresh group rows.
+  const newGroupRows = updatedUserData.filter(row =>
     row[1] === parsed.sId &&
     row[3] && row[3].toLowerCase() === parsed.offerName.toLowerCase()
   );
-  const totalCount = groupRows.length;
+  const totalCount = newGroupRows.length;
   console.log(`Group count for S_ID ${parsed.sId} and offer "${parsed.offerName}": ${totalCount}`);
-  
-  // Step 6. If group count meets/exceeds vendor MIN threshold, update each unconfirmed row.
+
+  // Step 6. Check threshold.
+  // We'll collect new confirmations (those updated from 0 to 1) to notify the vendor.
+  const newConfirmations = [];
   if (totalCount >= minThreshold) {
-    console.log(`Threshold reached (MIN=${minThreshold}). Confirming group entries...`);
-    // Loop over updatedUserData (which has only data rows; index 0 corresponds to sheet row 2)
+    console.log(`Threshold reached (MIN=${minThreshold}). Confirming unconfirmed entries...`);
+    // Loop over the updated data; note: the index i corresponds to sheet row = i + 2.
     for (let i = 0; i < updatedUserData.length; i++) {
       const row = updatedUserData[i];
       if (
         row[1] === parsed.sId &&
         row[3] && row[3].toLowerCase() === parsed.offerName.toLowerCase()
       ) {
-        // Absolute sheet row number = i + 2 (since our data starts at row 2).
         const sheetRowNum = i + 2;
         if (row[6] === "0") {
-          // Update the same row.
+          // For unconfirmed, update this row.
           const fullCode = generateCode(parsed.offerId, parsed.sId, row[4]);
           const updateRange = `Sheet1!G${sheetRowNum}:H${sheetRowNum}`;
           try {
@@ -228,18 +300,19 @@ async function handleSrijanOffer(from, msgBody) {
               valueInputOption: 'USER_ENTERED',
               resource: { values: [["1", fullCode]] }
             });
-            console.log(`Updated row ${sheetRowNum}: set Confirm=1 and Code=${fullCode}.`);
+            console.log(`Updated row ${sheetRowNum}: Confirm=1, Code=${fullCode}`);
             const displayCode = fullCode.slice(-6);
-            const confirmMsg = `Your offer "${parsed.offerName}" is confirmed. Use code ${displayCode} to proceed.`;
+            const confirmMsg = buildConfirmationMessage(parsed, displayCode);
             await sendWhatsAppMessage(row[4], confirmMsg);
             console.log(`Sent confirmation to ${row[4]} with code ${displayCode}.`);
+            newConfirmations.push({ phone: row[4], userName: row[5], displayCode });
           } catch (error) {
             console.error(`Error updating row ${sheetRowNum}:`, error);
           }
         } else if (row[6] === "1" && row[7] && row[7].trim()) {
-          // Already confirmed: re-send the confirmation.
+          // Already confirmed: re-send confirmation.
           const displayCode = row[7].slice(-6);
-          const confirmMsg = `Your offer "${parsed.offerName}" is confirmed. Use code ${displayCode} to proceed.`;
+          const confirmMsg = buildConfirmationMessage(parsed, displayCode);
           try {
             await sendWhatsAppMessage(row[4], confirmMsg);
             console.log(`Re-sent confirmation to ${row[4]} with code ${displayCode}.`);
@@ -249,17 +322,19 @@ async function handleSrijanOffer(from, msgBody) {
         }
       }
     }
-    // Step 7. Notify vendor.
-    const vendorMsg = `Offer "${parsed.offerName}" (S_ID: ${parsed.sId}) has reached the minimum threshold.`;
-    try {
-      await sendWhatsAppMessage(vendorContact, vendorMsg);
-      console.log(`Sent vendor notification to ${vendorContact}.`);
-    } catch (error) {
-      console.error("Error sending vendor notification:", error);
+    // Step 7. Notify vendor only once with new confirmations.
+    if (newConfirmations.length > 0) {
+      const vendorMsg = buildVendorNotificationMessage(parsed, newConfirmations);
+      try {
+        await sendWhatsAppMessage(vendorContact, vendorMsg);
+        console.log(`Sent vendor notification: ${vendorMsg}`);
+      } catch (error) {
+        console.error("Error sending vendor notification:", error);
+      }
     }
   } else {
-    // If group count is below MIN, send a waitlist message only to the new entry.
-    const waitMsg = `You are waitlisted for offer "${parsed.offerName}". We need ${minThreshold} users; currently, ${totalCount} have joined. Please invite your friends!`;
+    // Threshold not reached: send an interactive waitlist message to the new entry.
+    const waitMsg = buildWaitlistMessage(parsed, newGroupRows, minThreshold);
     try {
       await sendWhatsAppMessage(from, waitMsg);
       console.log(`Sent waitlist message to ${from}.`);
