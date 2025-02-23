@@ -309,7 +309,7 @@ async function handleSrijanOffer(from, msgBody) {
           } catch (error) {
             console.error(`Error updating row ${sheetRowNum}:`, error);
           }
-        } else if (row[6] === "1" && row[7] && row[7].trim() && from === row[4]) {
+        } else if (row[6] === "1" && row[7] && row[7].trim() ) {
           // Already confirmed: re-send confirmation.
           const displayCode = row[7].slice(-6);
           const confirmMsg = buildConfirmationMessage(parsed, displayCode);
