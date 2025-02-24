@@ -17,6 +17,7 @@ const SHEET_ID = '15qXHKDZ6Gc0jDJj4axxQVmXU45noST4f5aaTSX2iogw';
 // const { sendRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
 
 const app = express();
+app.use(express.static('public'));
 app.use(bodyParser.json());
 
 const ADMIN_NUMBER = '918917602924';  // your admin's WhatsApp
@@ -138,7 +139,7 @@ Your order has been received.`;
       const message = messages[0];
       const from = message.from;
       const msgBody = message.text?.body;
-      
+
       // Log the incoming message to Google Sheets
 try {
   const sheets = await getSheetsClient();
@@ -241,6 +242,33 @@ app.get("/webhook", (req, res) => {
 app.get('/', (req, res) => {
   res.send('Hello from your WhatsApp Bot server!');
 });
+
+// New endpoint to fetch messages from the Google Sheet
+app.get('/messages', async (req, res) => {
+  try {
+    const sheets = await getSheetsClient(); // Using your existing googlesheetoperation.js module
+    const result = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: 'Sheet1!A:C', // Assumes columns: Phone, Message, Time
+    });
+    let rows = result.data.values;
+    if (rows && rows.length > 1) {
+      // Assuming first row is header; remove it if needed
+      rows = rows.slice(1);
+    }
+    // Map rows to objects
+    const messages = rows ? rows.map(row => ({
+      phone: row[0],
+      message: row[1],
+      time: row[2]
+    })) : [];
+    res.json(messages);
+  } catch (err) {
+    console.error("Error fetching messages:", err);
+    res.status(500).send("Error fetching messages");
+  }
+});
+
 
 // Start server
 const port = process.env.PORT || 3000;

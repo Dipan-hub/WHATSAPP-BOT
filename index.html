@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WhatsApp Bot Messages</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #messages { border: 1px solid #ccc; padding: 10px; max-width: 600px; margin: 0 auto; }
+    .message { padding: 8px; border-bottom: 1px solid #eee; }
+    .phone { font-weight: bold; }
+    .time { color: #888; font-size: 0.9em; }
+    .notification { color: green; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>WhatsApp Bot Messages</h1>
+  <div id="notification"></div>
+  <div id="messages"></div>
+
+  <script>
+    let lastMessageCount = 0;
+    async function fetchMessages() {
+      try {
+        const response = await fetch('/messages');
+        const data = await response.json();
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerHTML = ''; // Clear previous messages
+
+        data.forEach(msg => {
+          const msgDiv = document.createElement('div');
+          msgDiv.classList.add('message');
+          // Convert Unix timestamp (if it is) or display as-is.
+          const time = isNaN(msg.time) ? msg.time : new Date(parseInt(msg.time) * 1000).toLocaleString();
+          msgDiv.innerHTML = `<div class="phone">${msg.phone}</div>
+                              <div class="text">${msg.message}</div>
+                              <div class="time">${time}</div>`;
+          messagesContainer.appendChild(msgDiv);
+        });
+
+        // Simple notification if new messages have been added
+        if (data.length > lastMessageCount) {
+          const notif = document.getElementById('notification');
+          notif.textContent = 'New messages received!';
+          // Clear notification after 3 seconds
+          setTimeout(() => { notif.textContent = ''; }, 3000);
+        }
+        lastMessageCount = data.length;
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    }
+    
+    // Fetch messages immediately and then every 5 seconds
+    fetchMessages();
+    setInterval(fetchMessages, 5000);
+  </script>
+</body>
+</html>
