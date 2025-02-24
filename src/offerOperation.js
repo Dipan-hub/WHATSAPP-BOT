@@ -239,8 +239,7 @@ async function handleSrijanOffer(from, msgBody) {
     // Find the last occurrence index (in the current userData array) where Sno equals groupSno.
     let lastIndex = -1;
     for (let i = 0; i < userData.length; i++) {
-      if (userData[i][1] === parsed.sId) {
-        console.log(userData[i][1] + '———————' + parsed.sId);
+      if (userData[i][0] === groupSno) {
         lastIndex = i;
       }
     }

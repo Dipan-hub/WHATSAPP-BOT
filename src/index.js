@@ -9,6 +9,9 @@ const { handleProductOffer, handlePaymentConfirmation , PaymentConfirmationMessa
 const { handleLiveOffer } = require('./CabOffer/handleLiveOffer.js');
 const { handlePicapoolOffer } = require('./GroupOffer/handlePicapoolOffer');
 const { handleSrijanOffer } = require('./offerOperation.js');
+const { getSheetsClient } = require('./googleSheetOperation.js');
+const SHEET_ID = '15qXHKDZ6Gc0jDJj4axxQVmXU45noST4f5aaTSX2iogw';
+
 
 // Import the Razorpay interactive message function
 // const { sendRazorpayInteractiveMessage } = require('./WhatsappXRazorPay/Whatsapp_razorpay_Integration.js');
@@ -135,6 +138,23 @@ Your order has been received.`;
       const message = messages[0];
       const from = message.from;
       const msgBody = message.text?.body;
+      
+      // Log the incoming message to Google Sheets
+try {
+  const sheets = await getSheetsClient();
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID,
+    range: 'Sheet1!A:C', // Adjust if your sheet has a different structure
+    valueInputOption: 'RAW',
+    resource: {
+      values: [[from, msgBody, message.timestamp || new Date().toISOString()]]
+    },
+  });
+  console.log('Message logged to Google Sheets.');
+} catch (err) {
+  console.error('Error logging message to Google Sheets:', err);
+}
+
 
       // For non-admin senders, check if we've reached today's order limit
       
