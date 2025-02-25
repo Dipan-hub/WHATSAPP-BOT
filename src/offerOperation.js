@@ -8,24 +8,33 @@ const VENDOR_SHEET_ID = process.env.VENDOR_SHEET_ID;
 /**
  * Parse the incoming message.
  * Expected sample:
- *   This side sjc
- *   S_ID: 534 
- *   OfferName: Testing the Test
- *   OfferID: 54
+ * 
+ * Hello, I would like to avail this offer. Here are the details:
+ * 
+ * Username: adsfsas
+ * Offer Name: Testing the Test
+ * Offer ID: 54
+ * S_ID: 534
+ * 
+ * Please confirm if I can proceed
  *
- * Returns an object: { sId, offerName, offerId }
+ * Returns an object: { username, sId, offerName, offerId }
  */
 function parseMessage(msgBody) {
+  const usernameMatch = msgBody.match(/Username:\s*(.+)/i);
+  const offerNameMatch = msgBody.match(/Offer\s*Name:\s*(.+)/i);
+  const offerIdMatch = msgBody.match(/Offer\s*ID:\s*(\d+)/i);
   const sIdMatch = msgBody.match(/S_ID:\s*(\d+)/i);
-  const offerNameMatch = msgBody.match(/OfferName:\s*(.+)/i);
-  const offerIdMatch = msgBody.match(/OfferID:\s*(\d+)/i);
-  if (!sIdMatch || !offerNameMatch || !offerIdMatch) {
+  
+  if (!usernameMatch || !offerNameMatch || !offerIdMatch || !sIdMatch) {
     throw new Error("Message format is incorrect. Could not parse required fields.");
   }
+  
   return {
-    sId: sIdMatch[1].trim(),
+    username: usernameMatch[1].trim(),
     offerName: offerNameMatch[1].trim(),
-    offerId: offerIdMatch[1].trim()
+    offerId: offerIdMatch[1].trim(),
+    sId: sIdMatch[1].trim()
   };
 }
 
@@ -225,9 +234,8 @@ async function handleSrijanOffer(from, msgBody) {
     console.log(`Assigned new group number ${groupSno} for S_ID ${parsed.sId}.`);
   }
 
-  // Step 4c. Determine username (first non-empty line from message).
-  const lines = msgBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const userName = lines[0] || "Unknown";
+  // Step 4c. Determine username from the parsed message.
+  const userName = parsed.username;
 
   // Build new row.
   const newRow = [groupSno, parsed.sId, parsed.offerId, parsed.offerName, from, userName, "0", ""];
