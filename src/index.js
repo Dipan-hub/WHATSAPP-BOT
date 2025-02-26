@@ -9,7 +9,7 @@ const { handleProductOffer, handlePaymentConfirmation , PaymentConfirmationMessa
 const { handleLiveOffer } = require('./CabOffer/handleLiveOffer.js');
 const { handlePicapoolOffer } = require('./GroupOffer/handlePicapoolOffer');
 const { handleSrijanOffer } = require('./offerOperation.js');
-const { getSheetsClient } = require('./googleSheetOperation.js');
+const { getSheetsClient ,  addRowToSheet } = require('./googleSheetOperation.js');
 const SHEET_ID = '15qXHKDZ6Gc0jDJj4axxQVmXU45noST4f5aaTSX2iogw';
 
 
@@ -145,10 +145,10 @@ try {
   const sheets = await getSheetsClient();
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: 'Sheet1!A:C', // Adjust if your sheet has a different structure
+    range: 'Sheet1!A:D', // Adjust if your sheet has a different structure
     valueInputOption: 'RAW',
     resource: {
-      values: [[from, msgBody, message.timestamp || new Date().toISOString()]]
+      values: [[from, msgBody, message.timestamp || new Date().toISOString(),0]]
     },
   });
   console.log('Message logged to Google Sheets.');
@@ -276,6 +276,21 @@ app.get('/messages', async (req, res) => {
   } catch (err) {
     console.error("Error fetching messages:", err);
     res.status(500).send("Error fetching messages");
+  }
+});
+
+app.post('/api/update-sheet', async (req, res) => {
+  const { phone, message, timestamp, isOutbound } = req.body;
+
+  try {
+    // Ensure Google Sheets update logic works (from googleSheetOperation.js)
+    const rowData = [phone, message, timestamp, isOutbound];
+    const result = await addRowToSheet(rowData, SHEET_ID);
+    console.log('Row appended to Google Sheet:', result);
+    res.status(200).json({ success: true, message: 'Message logged to Google Sheets' });
+  } catch (error) {
+    console.error('Error updating Google Sheet:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

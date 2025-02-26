@@ -42,7 +42,27 @@ async function getSheetsClient() {
     throw error;
   }
 }
+async function addRowToSheet(rowData, spreadsheetId) {
+  try {
+    const sheets = await getSheetsClient();
+    const range = 'Sheet1!A:D'; // Ensure this is correct based on your sheet structure
+    const result = await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [rowData],
+      },
+    });
+    console.log('Google Sheet updated:', result.data.updates);
+    return result.data;
+  } catch (error) {
+    console.error('Error appending to Google Sheet:', error);
+    throw error;
+  }
+}
 
 module.exports = {
   getSheetsClient,
+  addRowToSheet
 };
