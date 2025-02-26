@@ -155,6 +155,16 @@ try {
 } catch (err) {
   console.error('Error logging message to Google Sheets:', err);
 }
+// --- INSERTED CODE BLOCK START ---
+// Trigger update on the Vercel endpoint to notify new data is available
+axios.post('https://whatsapp-clone-fip95xwxs-deeeps-projects.vercel.app/api/trigger-update', { timestamp: Date.now() })
+  .then(response => {
+    console.log('Trigger update sent successfully:', response.data);
+  })
+  .catch(error => {
+    console.error('Error sending trigger update:', error.response?.data || error.message);
+  });
+// --- INSERTED CODE BLOCK END ---
 
 
       // For non-admin senders, check if we've reached today's order limit
