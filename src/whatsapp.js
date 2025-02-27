@@ -33,6 +33,13 @@ async function sendWhatsAppMessage(to, message) {
     );
 
     console.log('Message sent successfully:', response.data);
+
+    // ✅ Add row to Google Sheet after message is sent
+    addRowToSheet([to, message, Math.floor(Date.now() / 1000), 1], process.env.SHEET_ID)
+      .then(() => console.log('✅ Logged to Google Sheets'))
+      .catch(error => console.error('❌ Error logging to Google Sheets:', error));
+
+
     return response.data;
   } catch (error) {
     console.error('Error sending WhatsApp message:', error.response?.data || error.message);

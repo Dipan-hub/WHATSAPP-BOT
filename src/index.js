@@ -45,7 +45,14 @@ function sendMessage(to, msgBody) {
     headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` }
   })
     .then(response => {
+
       console.log('Message sent:', response.data);
+
+      // ✅ Add row to Google Sheet after message is sent
+    addRowToSheet([to, msgBody, Math.floor(Date.now() / 1000), 1], process.env.SHEET_ID)
+    .then(() => console.log('✅ Logged to Google Sheets'))
+    .catch(error => console.error('❌ Error logging to Google Sheets:', error));
+
       return response.data;
     })
     .catch(error => {
@@ -64,14 +71,21 @@ function forwardMessageToAdmin(from, msgBody) {
       preview_url: false
     }
   };
-
   axios.post(url, data, {
     headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` }
   }).then(response => {
+    
     console.log('Message forwarded to admin:', response.data);
+
+    // ✅ Add row to Google Sheet after message is sent
+    addRowToSheet([from, msgBody, Math.floor(Date.now() / 1000), 0], process.env.SHEET_ID)
+      .then(() => console.log('✅ Logged to Google Sheets'))
+      .catch(error => console.error('❌ Error logging to Google Sheets:', error));
+
   }).catch(error => {
     console.error('Error forwarding message to admin:', error.response?.data || error.message);
   });
+  
 }
 
 // This route is your main webhook endpoint for WhatsApp
