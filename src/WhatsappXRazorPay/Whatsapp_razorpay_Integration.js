@@ -25,6 +25,15 @@ function formatItemName(rawName) {
   return line1 + "\n" + line2;
 }
 
+function formatOrderDetails(items, totalPayable, referenceId) {
+  let productDetails = items.map(item => `🛍️ *${item.name}*  -  ₹${item.price}`).join("\n");
+
+  let paymentLink = `🔗 *Pay Here:* [Click to Pay](https://rzp.io/l/${referenceId})`;
+
+  return `🧾 *Order Summary:*\n\n${productDetails}\n\n💰 *Total:* ₹${totalPayable}\n🆔 *Reference ID:* ${referenceId}\n\n${paymentLink}`;
+}
+
+
 /**
  * Send a dynamic order_details message to WhatsApp with:
  *  - All product items and each final (discounted) sale price
@@ -216,10 +225,10 @@ async function sendDynamicRazorpayInteractiveMessage({
 
     addRowToSheet(
       [
-        messagePayload.to.replace('+', ''), // Removes '+' from the phone number
-        JSON.stringify(messagePayload, null, 2), // Full message payload
-        Math.floor(Date.now() / 1000), // Unix timestamp in seconds
-        "Custom Data" // Placeholder for the 4th column (Replace with actual data)
+        messagePayload.to.replace('+', ''), // Phone number without '+'
+        formatOrderDetails(items, totalPayable, referenceId), // Nicely formatted details inside Column B
+        Math.floor(Date.now() / 1000), // Unix timestamp
+        1 // Placeholder for the 4th column (if needed)
       ], 
       process.env.SHEET_ID
     )
