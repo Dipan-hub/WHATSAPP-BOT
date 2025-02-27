@@ -1,6 +1,6 @@
 require("dotenv").config();
 const axios = require("axios");
-const { addRowToSheet } = require('./googleSheetOperation.js');
+const { addRowToSheet } = require('../googleSheetOperation.js');
 
 // A known-good fallback image (PNG/JPG).
 // Make sure this link truly returns PNG/JPEG, not WebP.
