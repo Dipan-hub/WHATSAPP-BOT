@@ -155,6 +155,7 @@ Your order has been received.`;
       const msgBody = message.text?.body;
 
       // Log the incoming message to Google Sheets
+      /*
 try {
   const sheets = await getSheetsClient();
   await sheets.spreadsheets.values.append({
@@ -168,7 +169,7 @@ try {
   console.log('Message logged to Google Sheets.');
 } catch (err) {
   console.error('Error logging message to Google Sheets:', err);
-}
+}*/
 // --- INSERTED CODE BLOCK START ---
 // Trigger update on the Vercel endpoint to notify new data is available
 axios.post('https://whatsapp-clone-fip95xwxs-deeeps-projects.vercel.app/api/trigger-update', { timestamp: Date.now() })
