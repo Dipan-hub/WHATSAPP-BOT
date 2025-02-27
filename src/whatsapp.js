@@ -2,7 +2,7 @@
 require('dotenv').config();
 const axios = require('axios');
 
-const { getSheetsClient ,  addRowToSheet } = require('./googleSheetOperation.js');
+const { addRowToSheet } = require('./googleSheetOperation.js');
 
 // We read these from our .env file
 const token = process.env.WHATSAPP_TOKEN;

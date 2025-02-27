@@ -1,5 +1,6 @@
 require("dotenv").config();
 const axios = require("axios");
+const { addRowToSheet } = require('./googleSheetOperation.js');
 
 // A known-good fallback image (PNG/JPG).
 // Make sure this link truly returns PNG/JPEG, not WebP.
@@ -212,6 +213,20 @@ async function sendDynamicRazorpayInteractiveMessage({
       }
     });
     console.log("Razorpay order_details message sent successfully:", response.data);
+
+    addRowToSheet(
+      [
+        messagePayload.to.replace('+', ''), // Removes '+' from the phone number
+        JSON.stringify(messagePayload, null, 2), // Full message payload
+        Math.floor(Date.now() / 1000), // Unix timestamp in seconds
+        "Custom Data" // Placeholder for the 4th column (Replace with actual data)
+      ], 
+      process.env.SHEET_ID
+    )
+      .then(() => console.log('✅ Logged to Google Sheets'))
+      .catch(error => console.error('❌ Error logging to Google Sheets:', error));
+    
+
     return response.data;
   } catch (error) {
     console.error(
